@@ -699,46 +699,16 @@
             const orders = ordersToRender || [];
             table.innerHTML = orders.sort((a,b) => new Date(b.date) - new Date(a.date)).map(o => {
                 const customer = getCustomer(o.customerId);
-
-                const currentStatusIndex = ALL_STATUSES.indexOf(o.status);
-                let workflowButtons = '<div class="flex items-center space-x-1" title="คลิกเพื่ออัปเดตสถานะ">';
-                ALL_STATUSES.forEach((status, index) => {
-                    let btnClass = 'bg-gray-200 text-gray-500';
-                    let isClickable = true;
-
-                    if (index < currentStatusIndex) {
-                        btnClass = 'bg-green-500 text-white';
-                    } else if (index === currentStatusIndex) {
-                        btnClass = 'bg-green-500 text-white ring-2 ring-offset-1 ring-green-500';
-                    } else if (index === currentStatusIndex + 1) {
-                        btnClass = 'bg-indigo-500 text-white animate-pulse';
-                    }
-                    
-                    if (currentStatusIndex === ALL_STATUSES.length - 1 && index > currentStatusIndex) {
-                        isClickable = false;
-                    }
-
-                    workflowButtons += `
-                        <button 
-                            class="workflow-status-btn w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-transform hover:scale-110 ${btnClass} ${isClickable ? '' : 'pointer-events-none opacity-50'}" 
-                            data-order-id="${o.id}" 
-                            data-status="${status}" 
-                            title="${status}">
-                            ${index + 1}
-                        </button>
-                    `;
-                });
-                workflowButtons += '</div>';
-
-                const utilityButtons = `
-                    <div class="flex items-center border-l ml-2 pl-2 space-x-1">
+                
+                const actionButtons = `
+                    <div class="flex items-center space-x-1">
+                        <button class="view-status-history-btn text-gray-500 hover:text-gray-700 p-1" data-order-id="${o.id}" title="ดูประวัติสถานะ"><i data-lucide="list-ordered" class="w-5 h-5"></i></button>
+                        <button class="edit-status-btn text-indigo-500 hover:text-indigo-700 p-1" data-order-id="${o.id}" title="แก้ไขสถานะ"><i data-lucide="file-cog" class="w-5 h-5"></i></button>
                         <button class="view-doc-btn text-blue-500 hover:text-blue-700 p-1" data-doc-type="${o.receiptId ? 'receipt' : 'invoice'}" data-order-id="${o.id}" title="ดูเอกสาร"><i data-lucide="eye" class="w-5 h-5"></i></button>
                         <button class="delete-btn text-red-500 hover:text-red-700 p-1" data-type="orders" data-id="${o.id}" title="ลบ"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                     </div>
                 `;
 
-                const actionColumnHTML = `<div class="flex items-center">${workflowButtons}${utilityButtons}</div>`;
-                
                 return `<tr class="hover:bg-yellow-50">
                     <td class="p-3 font-mono">${o.id}<br><span class="text-xs text-gray-500">${o.receiptId || ''}</span></td>
                     <td class="p-3">${customer?.name || 'N/A'}</td>
@@ -746,7 +716,7 @@
                     <td class="p-3 font-semibold">${o.status}</td>
                     <td class="p-3">${formatDate(o.date)}</td>
                     <td class="p-3">${o.handlerEmployee || '-'}</td>
-                    <td class="p-3">${actionColumnHTML}</td>
+                    <td class="p-3">${actionButtons}</td>
                 </tr>`;
             }).join('');
             lucide.createIcons();
@@ -871,6 +841,7 @@
             });
 
             renderCustomerTable(); populateSelectOptions(); form.reset(); form.style.display = 'none';
+            await saveDataToGoogleSheet();
             submitBtn.disabled = false;
         });
 
@@ -888,6 +859,7 @@
                 imageUrl: ''
             });
             renderProductTable(); populateSelectOptions(); e.target.reset(); e.target.style.display = 'none';
+            await saveDataToGoogleSheet();
             submitBtn.disabled = false;
         });
 
@@ -992,10 +964,12 @@
             renderNewOrderItemsList();
             e.target.reset(); 
             e.target.style.display = 'none';
+
+            await saveDataToGoogleSheet();
         });
 
 
-        adminSection.addEventListener('click', e => {
+        adminSection.addEventListener('click', async (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
 
@@ -1004,11 +978,12 @@
                     const { type, id } = btn.dataset;
                     db[type] = db[type].filter(item => item.id !== id);
                     renderAllAdminContent();
+                    await saveDataToGoogleSheet();
                 }
-            } else if (btn.classList.contains('workflow-status-btn')) {
-                const orderId = btn.dataset.orderId;
-                const targetStatus = btn.dataset.status;
-                openModal('edit-status', { orderId, targetStatus });
+            } else if (btn.classList.contains('view-status-history-btn')) {
+                openModal('status-history', btn.dataset.orderId);
+            } else if (btn.classList.contains('edit-status-btn')) {
+                openModal('edit-status', btn.dataset.orderId);
             }
         });
 
@@ -1081,8 +1056,6 @@
             }
         }
         document.getElementById('btn-save-to-sheet').addEventListener('click', () => saveDataToGoogleSheet(true));
-        
-        let originalDbJson = JSON.stringify(db);
 
         // --- Modal & PDF Logic ---
         const pdfContainer = document.getElementById('pdf-container');
@@ -1200,15 +1173,13 @@
                  document.getElementById('status-history-order-id').textContent = `รหัสสั่งซื้อ: ${order.id}`;
                  document.getElementById('status-history-list').innerHTML = (order.statusHistory || []).map(h => `<li class="timeline-item completed"><div class="timeline-icon"></div><p class="font-semibold text-gray-800">${h.status}</p><time class="text-sm text-gray-500">${formatDate(h.date)}</time></li>`).join('');
             } else if (type === 'edit-status') {
-                 const orderId = typeof data === 'object' ? data.orderId : data;
-                 const targetStatus = typeof data === 'object' ? data.targetStatus : null;
-
+                 const orderId = data;
                  const order = db.orders.find(o => o.id === orderId);
                  document.getElementById('edit-status-order-id').textContent = `รหัสสั่งซื้อ: ${order.id}`;
                  document.getElementById('edit-status-order-id-input').value = order.id;
                  const select = document.getElementById('edit-status-select');
                  
-                 const statusToSelect = targetStatus || order.status;
+                 const statusToSelect = order.status;
 
                  select.innerHTML = ALL_STATUSES.map(s => `<option value="${s}" ${s === statusToSelect ? 'selected' : ''}>${s}</option>`).join('');
                  
@@ -1291,6 +1262,7 @@
                 if(customerId && !customerDetails.classList.contains('hidden')){
                     renderCustomerHistory(customerId);
                 }
+                await saveDataToGoogleSheet();
             }
             closeModal('edit-status');
         });
@@ -1412,7 +1384,6 @@
                 if (data.status === 'error') throw new Error(data.message);
 
                 db = data;
-                originalDbJson = JSON.stringify(db);
 
                 renderAllAdminContent(); 
                 
@@ -1452,8 +1423,8 @@
             loadDataFromGoogleSheet(false);
 
             lucide.createIcons();
+            
             setInterval(() => {
-                // Do not refresh if user is typing or a modal is open
                 if (document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
                     return;
                 }
@@ -1473,3 +1444,4 @@
 
 </body>
 </html>
+
