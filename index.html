@@ -133,6 +133,7 @@
 
         <div id="main-content" class="hidden">
             <header class="text-center mb-8">
+                <img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" border="0" class="mx-auto h-24 w-auto mb-4">
                 <h2 id="header-store-name" class="text-3xl font-semibold text-teal-700 mb-2">สมุนไพรรักษ์ธรรม</h2>
                 <h1 class="text-4xl font-bold text-slate-700">ระบบตรวจสอบการซื้อสินค้า</h1>
                 <p class="text-slate-500">สำหรับลูกค้าและผู้ดูแลระบบ</p>
@@ -695,34 +696,62 @@
         
         function renderOrderTable(ordersToRender) {
             const table = document.getElementById('admin-orders-table');
-            const statusColors = {
-                "รับคำสั่งซื้อ": "text-gray-600 border-gray-300",
-                "ชำระเงินแล้ว": "text-blue-600 border-blue-400",
-                "จัดส่งแล้ว": "text-yellow-600 border-yellow-400",
-                "ลูกค้าได้รับแล้ว": "text-green-600 border-green-500",
-            };
-
             const orders = ordersToRender || [];
             table.innerHTML = orders.sort((a,b) => new Date(b.date) - new Date(a.date)).map(o => {
                 const customer = getCustomer(o.customerId);
-                let actionButtons = `
-                    <button class="view-status-history-btn text-gray-500 hover:text-gray-700 p-1" data-order-id="${o.id}" title="ดูประวัติสถานะ"><i data-lucide="list-ordered" class="w-5 h-5"></i></button>
-                    <button class="edit-status-btn text-gray-500 hover:text-gray-700 p-1" data-order-id="${o.id}" title="แก้ไขสถานะ"><i data-lucide="file-cog" class="w-5 h-5"></i></button>
-                    <button class="view-doc-btn text-blue-500 hover:text-blue-700 p-1" data-doc-type="${o.receiptId ? 'receipt' : 'invoice'}" data-order-id="${o.id}" title="ดูเอกสาร"><i data-lucide="eye" class="w-5 h-5"></i></button>
-                    <button class="delete-btn text-red-500 hover:text-red-700 p-1" data-type="orders" data-id="${o.id}" title="ลบ"><i data-lucide="trash-2" class="w-5 h-5"></i></button>`;
+
+                const currentStatusIndex = ALL_STATUSES.indexOf(o.status);
+                let workflowButtons = '<div class="flex items-center space-x-1" title="คลิกเพื่ออัปเดตสถานะ">';
+                ALL_STATUSES.forEach((status, index) => {
+                    let btnClass = 'bg-gray-200 text-gray-500';
+                    let isClickable = true;
+
+                    if (index < currentStatusIndex) {
+                        btnClass = 'bg-green-500 text-white';
+                    } else if (index === currentStatusIndex) {
+                        btnClass = 'bg-green-500 text-white ring-2 ring-offset-1 ring-green-500';
+                    } else if (index === currentStatusIndex + 1) {
+                        btnClass = 'bg-indigo-500 text-white animate-pulse';
+                    }
+                    
+                    if (currentStatusIndex === ALL_STATUSES.length - 1 && index > currentStatusIndex) {
+                        isClickable = false;
+                    }
+
+                    workflowButtons += `
+                        <button 
+                            class="workflow-status-btn w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-transform hover:scale-110 ${btnClass} ${isClickable ? '' : 'pointer-events-none opacity-50'}" 
+                            data-order-id="${o.id}" 
+                            data-status="${status}" 
+                            title="${status}">
+                            ${index + 1}
+                        </button>
+                    `;
+                });
+                workflowButtons += '</div>';
+
+                const utilityButtons = `
+                    <div class="flex items-center border-l ml-2 pl-2 space-x-1">
+                        <button class="view-doc-btn text-blue-500 hover:text-blue-700 p-1" data-doc-type="${o.receiptId ? 'receipt' : 'invoice'}" data-order-id="${o.id}" title="ดูเอกสาร"><i data-lucide="eye" class="w-5 h-5"></i></button>
+                        <button class="delete-btn text-red-500 hover:text-red-700 p-1" data-type="orders" data-id="${o.id}" title="ลบ"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                    </div>
+                `;
+
+                const actionColumnHTML = `<div class="flex items-center">${workflowButtons}${utilityButtons}</div>`;
                 
                 return `<tr class="hover:bg-yellow-50">
                     <td class="p-3 font-mono">${o.id}<br><span class="text-xs text-gray-500">${o.receiptId || ''}</span></td>
                     <td class="p-3">${customer?.name || 'N/A'}</td>
                     <td class="p-3">${calculateOrderTotal(o).toLocaleString()} บาท</td>
-                    <td class="p-3 font-semibold"><span class="border-b-2 ${statusColors[o.status] || ''}">${o.status}</span></td>
+                    <td class="p-3 font-semibold">${o.status}</td>
                     <td class="p-3">${formatDate(o.date)}</td>
                     <td class="p-3">${o.handlerEmployee || '-'}</td>
-                    <td class="p-3"><div class="flex space-x-1 items-center">${actionButtons}</div></td>
+                    <td class="p-3">${actionColumnHTML}</td>
                 </tr>`;
             }).join('');
             lucide.createIcons();
         }
+
         
         document.getElementById('search-order-btn').addEventListener('click', () => {
             const orderIdQuery = document.getElementById('search-order-id').value.trim().toLowerCase();
@@ -976,10 +1005,10 @@
                     db[type] = db[type].filter(item => item.id !== id);
                     renderAllAdminContent();
                 }
-            } else if (btn.classList.contains('view-status-history-btn')) {
-                openModal('status-history', btn.dataset.orderId);
-            } else if (btn.classList.contains('edit-status-btn')) {
-                openModal('edit-status', btn.dataset.orderId);
+            } else if (btn.classList.contains('workflow-status-btn')) {
+                const orderId = btn.dataset.orderId;
+                const targetStatus = btn.dataset.status;
+                openModal('edit-status', { orderId, targetStatus });
             }
         });
 
@@ -1067,7 +1096,7 @@
 
             return `<div class="p-2 sm:p-4 printable-content">
                 <div id="invoice-content" class="bg-white p-6 sm:p-8 shadow-lg max-w-4xl mx-auto border">
-                    <div class="flex justify-between items-start mb-6"><div><h2 class="text-2xl font-bold text-slate-800">ใบสั่งซื้อ (Sales Order)</h2><p class="text-slate-500">รหัสสั่งซื้อ: ${order.id}</p></div><div class="text-right"><h3 class="text-xl font-bold text-teal-700">${storeSettings.name}</h3><div class="text-sm">${storeSettings.address.replace(/\n/g, '<br>')}</div></div></div>
+                    <div class="flex justify-between items-start mb-6"><div><img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" class="h-16 w-auto mb-4"><h2 class="text-2xl font-bold text-slate-800">ใบสั่งซื้อ (Sales Order)</h2><p class="text-slate-500">รหัสสั่งซื้อ: ${order.id}</p></div><div class="text-right"><h3 class="text-xl font-bold text-teal-700">${storeSettings.name}</h3><div class="text-sm">${storeSettings.address.replace(/\n/g, '<br>')}</div></div></div>
                     <div class="grid grid-cols-2 gap-6 border-y border-gray-200 py-4 mb-6 text-sm"><div><h4 class="font-bold mb-1 text-gray-600">ข้อมูลลูกค้า:</h4><p class="font-semibold text-gray-800">${customer.name}</p><p class="text-gray-700">${customer.address}</p></div><div class="text-right"><h4 class="font-bold mb-1 text-gray-600">วันที่สั่งซื้อ:</h4><p class="text-gray-700">${formatDate(order.date)}</p><h4 class="font-bold mb-1 mt-2 text-gray-600">สถานะ:</h4><p class="font-semibold text-gray-800">${order.status}</p></div></div>
                     <table class="w-full mb-6 text-sm"><thead><tr class="border-b bg-gray-50"><th class="text-left py-2 px-1 font-semibold">สินค้า</th><th class="text-center py-2 px-1 font-semibold">จำนวน</th><th class="text-right py-2 px-1 font-semibold">ราคา/หน่วย</th><th class="text-right py-2 px-1 font-semibold">ราคารวม</th></tr></thead><tbody>${itemsHTML}</tbody><tfoot><tr class="border-t-2 font-bold"><td colspan="3" class="text-right py-2 px-1">ยอดรวมสุทธิ:</td><td class="text-right py-2 px-1 text-lg text-indigo-600">${calculateOrderTotal(order).toLocaleString()} บาท</td></tr></tfoot></table>
                     <div class="mt-8 pt-4 border-t text-xs text-gray-500"><p>ขอบคุณที่ใช้บริการ</p></div>
@@ -1086,7 +1115,7 @@
                 <div id="receipt-content" class="relative bg-white p-6 sm:p-8 shadow-lg max-w-4xl mx-auto border">
                     <div class="watermark">PAID</div>
                     <div class="content-wrapper">
-                        <div class="flex justify-between items-start mb-6"><div><h2 class="text-2xl font-bold text-teal-800">ใบเสร็จรับเงิน (Receipt)</h2><p class="text-slate-500">เลขที่: ${order.receiptId}</p></div><div class="text-right"><h3 class="text-xl font-bold text-teal-700">${storeSettings.name}</h3><div class="text-sm">${storeSettings.address.replace(/\n/g, '<br>')}</div></div></div>
+                        <div class="flex justify-between items-start mb-6"><div><img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" class="h-16 w-auto mb-4"><h2 class="text-2xl font-bold text-teal-800">ใบเสร็จรับเงิน (Receipt)</h2><p class="text-slate-500">เลขที่: ${order.receiptId}</p></div><div class="text-right"><h3 class="text-xl font-bold text-teal-700">${storeSettings.name}</h3><div class="text-sm">${storeSettings.address.replace(/\n/g, '<br>')}</div></div></div>
                         <div class="grid grid-cols-2 gap-6 border-y border-gray-200 py-4 mb-6 text-sm"><div><h4 class="font-bold mb-1 text-gray-600">ข้อมูลลูกค้า:</h4><p class="font-semibold text-gray-800">${customer.name}</p><p class="text-gray-700">${customer.address}</p></div><div class="text-right"><h4 class="font-bold mb-1 text-gray-600">วันที่ออกใบเสร็จ:</h4><p class="text-gray-700">${formatDate(order.receiptDate)}</p><h4 class="font-bold mb-1 mt-2 text-gray-600">อ้างอิงคำสั่งซื้อ:</h4><p class="text-gray-700">${order.id}</p></div></div>
                         <table class="w-full mb-6 text-sm"><thead><tr class="border-b bg-gray-50"><th class="text-left py-2 px-1 font-semibold">สินค้า</th><th class="text-center py-2 px-1 font-semibold">จำนวน</th><th class="text-right py-2 px-1 font-semibold">ราคา/หน่วย</th><th class="text-right py-2 px-1 font-semibold">ราคารวม</th></tr></thead><tbody>${itemsHTML}</tbody><tfoot><tr class="border-t-2 font-bold"><td colspan="3" class="text-right py-2 px-1">ยอดรวมสุทธิ:</td><td class="text-right py-2 px-1 text-lg text-teal-600">${calculateOrderTotal(order).toLocaleString()} บาท</td></tr></tfoot></table>
                         <div class="mt-8 pt-4 border-t text-xs text-gray-500"><p>ชำระเงินเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ</p></div>
@@ -1113,7 +1142,7 @@
 
             return `<div class="p-2 sm:p-4 printable-content">
                 <div id="sales-report-content" class="bg-white p-6 sm:p-8 shadow-lg max-w-4xl mx-auto border">
-                    <div class="text-center mb-8"><h2 class="text-2xl font-bold text-slate-800">รายงานสรุปยอดขาย</h2><p class="text-slate-500">${storeSettings.name}</p><p class="text-slate-500">สำหรับวันที่ ${formatDate(startDate)} ถึง ${formatDate(endDate)}</p></div>
+                    <div class="text-center mb-8"><img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" class="h-16 w-auto mx-auto mb-2"><h2 class="text-2xl font-bold text-slate-800">รายงานสรุปยอดขาย</h2><p class="text-slate-500">${storeSettings.name}</p><p class="text-slate-500">สำหรับวันที่ ${formatDate(startDate)} ถึง ${formatDate(endDate)}</p></div>
                     <div class="grid grid-cols-2 gap-4 mb-6"><div class="bg-gray-100 p-4 rounded-lg text-center"><h4 class="font-bold text-gray-700">จำนวนคำสั่งซื้อ</h4><p class="text-2xl font-bold text-gray-900">${orders.length}</p></div><div class="bg-green-100 p-4 rounded-lg text-center"><h4 class="font-bold text-green-800">ยอดขายรวม</h4><p class="text-2xl font-bold text-green-900">${totalSales.toLocaleString()} บาท</p></div></div>
                     <h4 class="font-bold text-lg mb-2 mt-6">สรุปยอดขายตามสินค้า</h4>
                     <table class="w-full text-sm mb-8"><thead><tr class="bg-gray-100"><th class="p-2 text-left font-semibold">รหัสสินค้า</th><th class="p-2 text-left font-semibold">ชื่อสินค้า</th><th class="p-2 text-center font-semibold">จำนวนรวม</th><th class="p-2 text-right font-semibold">ยอดขายรวม</th></tr></thead><tbody>${productItemsHTML}</tbody></table>
@@ -1171,11 +1200,17 @@
                  document.getElementById('status-history-order-id').textContent = `รหัสสั่งซื้อ: ${order.id}`;
                  document.getElementById('status-history-list').innerHTML = (order.statusHistory || []).map(h => `<li class="timeline-item completed"><div class="timeline-icon"></div><p class="font-semibold text-gray-800">${h.status}</p><time class="text-sm text-gray-500">${formatDate(h.date)}</time></li>`).join('');
             } else if (type === 'edit-status') {
-                 const order = db.orders.find(o => o.id === data);
+                 const orderId = typeof data === 'object' ? data.orderId : data;
+                 const targetStatus = typeof data === 'object' ? data.targetStatus : null;
+
+                 const order = db.orders.find(o => o.id === orderId);
                  document.getElementById('edit-status-order-id').textContent = `รหัสสั่งซื้อ: ${order.id}`;
                  document.getElementById('edit-status-order-id-input').value = order.id;
                  const select = document.getElementById('edit-status-select');
-                 select.innerHTML = ALL_STATUSES.map(s => `<option value="${s}" ${s === order.status ? 'selected' : ''}>${s}</option>`).join('');
+                 
+                 const statusToSelect = targetStatus || order.status;
+
+                 select.innerHTML = ALL_STATUSES.map(s => `<option value="${s}" ${s === statusToSelect ? 'selected' : ''}>${s}</option>`).join('');
                  
                  const shippingProviderSelect = document.getElementById('edit-shipping-provider-select');
                  const otherShippingInput = document.getElementById('edit-shipping-provider-other');
@@ -1193,7 +1228,7 @@
                  }
 
                  document.getElementById('edit-tracking-number').value = order.trackingNumber || '';
-                 toggleShippingInfo(order.status);
+                 toggleShippingInfo(statusToSelect);
                  toggleOtherShippingInput();
             }
 
@@ -1438,4 +1473,3 @@
 
 </body>
 </html>
-
