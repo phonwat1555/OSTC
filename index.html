@@ -263,10 +263,13 @@
                     <div id="mgmt-section-customers" class="mgmt-section">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-2xl font-bold">จัดการข้อมูลลูกค้า</h3>
-                            <button id="btn-show-add-customer" class="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-600"><i data-lucide="plus"></i><span>เพิ่มลูกค้า</span></button>
+                            <div class="flex space-x-2">
+                                <button id="print-customer-list-btn" class="bg-gray-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-gray-600"><i data-lucide="printer"></i><span>พิมพ์รายชื่อ</span></button>
+                                <button id="btn-show-add-customer" class="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-600"><i data-lucide="plus"></i><span>เพิ่มลูกค้า</span></button>
+                            </div>
                         </div>
                         <form id="add-customer-form" class="add-form bg-blue-50 p-4 rounded-lg mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" id="customer-id-input" placeholder="รหัสสมาชิก (เช่น C004)" class="p-2 border rounded-lg" required>
+                            <input type="text" id="customer-id-input" placeholder="รหัสสมาชิก (เช่น C014)" class="p-2 border rounded-lg" required>
                             <input type="text" id="customer-name" placeholder="ชื่อ-นามสกุล" class="p-2 border rounded-lg" required>
                             <textarea id="customer-address" placeholder="ที่อยู่" class="p-2 border rounded-lg md:col-span-2" required rows="3"></textarea>
                             <div class="md:col-span-2 flex items-center gap-2">
@@ -276,7 +279,8 @@
                                 <button type="button" class="close-form-btn bg-gray-300 text-gray-800 p-3 rounded-lg hover:bg-gray-400">ปิด</button>
                             </div>
                         </form>
-                        <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-blue-100"><tr><th class="p-3 text-left">รหัส</th><th class="p-3 text-left">ชื่อ</th><th class="p-3 text-left">ที่อยู่</th><th class="p-3 text-left">การกระทำ</th></tr></thead><tbody id="admin-customers-table"></tbody></table></div>
+                        <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-blue-100"><tr><th class="p-3 text-left">รหัส</th><th class="p-3 text-left">ชื่อ</th><th class="p-3 text-left">ที่อยู่</th><th class="p-3 text-right">ยอดซื้อสะสม</th><th class="p-3 text-left">การกระทำ</th></tr></thead><tbody id="admin-customers-table"></tbody></table></div>
+                        <div id="customers-pagination" class="flex justify-center items-center space-x-1 sm:space-x-2 mt-4"></div>
                     </div>
 
                     <!-- Product Management -->
@@ -507,7 +511,6 @@
             lowStockThreshold: 5,
         };
         
-        // This will be populated from Google Sheet
         let db = {
             customers: [],
             products: [],
@@ -520,6 +523,10 @@
         const ADMIN_PASSWORD = 'admin1234'; 
         let isAdminAuthenticated = false;
 
+        let adminPaginationState = {
+            customers: { currentPage: 1, itemsPerPage: 10 },
+        };
+
         // --- Utility Functions ---
         const getCustomer = (id) => db.customers.find(c => c.id === id);
         const getProduct = (id) => db.products.find(p => p.id === id);
@@ -529,6 +536,11 @@
                 const product = getProduct(item.productId);
                 return total + (product?.price || 0) * item.quantity;
             }, 0);
+        };
+        const calculateCustomerTotalSpending = (customerId) => {
+            return (db.orders || [])
+                .filter(o => o.customerId === customerId)
+                .reduce((total, order) => total + calculateOrderTotal(order), 0);
         };
         const formatDate = (dateString) => {
             if (!dateString) return 'N/A';
@@ -543,6 +555,28 @@
         const customerLogin = document.getElementById('customer-login');
         const customerDetails = document.getElementById('customer-details');
         
+        function generateNewCustomerId() {
+            const prefix = 'C';
+            const existingIds = (db.customers || [])
+                .map(c => c.id)
+                .filter(id => id.startsWith(prefix) && !isNaN(id.substring(1)))
+                .map(id => parseInt(id.substring(1), 10));
+
+            const nextNum = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+            return `${prefix}${String(nextNum).padStart(3, '0')}`;
+        }
+        
+        function generateNewProductId() {
+            const prefix = 'P';
+            const existingIds = (db.products || [])
+                .map(p => p.id)
+                .filter(id => id.startsWith(prefix) && !isNaN(id.substring(1)))
+                .map(id => parseInt(id.substring(1), 10));
+
+            const nextNum = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+            return `${prefix}${String(nextNum).padStart(3, '0')}`;
+        }
+
         function generateNewReceiptId() {
             const year = new Date().getFullYear();
             const prefix = `RC${year}`;
@@ -723,13 +757,75 @@
             populateSelectOptions();
         }
 
-        function renderCustomerTable() {
+        function renderPaginationControls(type, totalItems) {
+            const paginationContainer = document.getElementById(`${type}-pagination`);
+            if (!paginationContainer) return;
+
+            const { currentPage, itemsPerPage } = adminPaginationState[type];
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+            if (totalPages <= 1) {
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            let paginationHTML = '';
+            
+            // Previous button
+            paginationHTML += `
+                <button class="pagination-btn p-2 rounded-md ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-300 hover:bg-indigo-500 hover:text-white'}" data-type="${type}" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>
+                    <i data-lucide="chevron-left" class="w-5 h-5 pointer-events-none"></i>
+                </button>
+            `;
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHTML += `
+                    <button class="pagination-btn px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base ${i === currentPage ? 'bg-indigo-600 text-white' : 'bg-gray-200 hover:bg-indigo-500 hover:text-white'}" data-type="${type}" data-page="${i}">
+                        ${i}
+                    </button>
+                `;
+            }
+
+            // Next button
+            paginationHTML += `
+                <button class="pagination-btn p-2 rounded-md ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-300 hover:bg-indigo-500 hover:text-white'}" data-type="${type}" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>
+                    <i data-lucide="chevron-right" class="w-5 h-5 pointer-events-none"></i>
+                </button>
+            `;
+
+            paginationContainer.innerHTML = paginationHTML;
+            lucide.createIcons();
+        }
+
+        function renderCustomerTable(page = 1) {
             const table = document.getElementById('admin-customers-table');
-            table.innerHTML = (db.customers || []).map(c => `
+            const customers = db.customers || [];
+            
+            adminPaginationState.customers.currentPage = page;
+            const { currentPage, itemsPerPage } = adminPaginationState.customers;
+
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const paginatedCustomers = customers.slice(start, end);
+
+            table.innerHTML = paginatedCustomers.map(c => {
+                const totalSpending = calculateCustomerTotalSpending(c.id);
+                return `
                 <tr class="hover:bg-blue-50">
-                <td class="p-3 font-mono">${c.id}</td><td class="p-3">${c.name}</td><td class="p-3 text-sm">${c.address}</td>
-                <td class="p-3"><button class="delete-btn text-red-500 hover:text-red-700" data-type="customers" data-id="${c.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td></tr>
-            `).join('');
+                    <td class="p-3 font-mono">${c.id}</td>
+                    <td class="p-3">${c.name}</td>
+                    <td class="p-3 text-sm">${c.address}</td>
+                    <td class="p-3 text-right font-semibold text-indigo-600">${totalSpending.toLocaleString('th-TH')} ฿</td>
+                    <td class="p-3">
+                        <button class="delete-btn text-red-500 hover:text-red-700" data-type="customers" data-id="${c.id}">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </td>
+                </tr>
+            `}).join('');
+
+            renderPaginationControls('customers', customers.length);
             lucide.createIcons();
         }
 
@@ -880,12 +976,14 @@
             productSelect.innerHTML = '<option value="">เลือกสินค้า...</option>' + (db.products || []).filter(p => p.stock > 0).map(p => `<option value="${p.id}">${p.name} (คงเหลือ: ${p.stock})</option>`).join('');
         }
         
-        document.querySelectorAll('[id^="btn-show-add-"]').forEach(btn => 
-            btn.addEventListener('click', () => {
-                const formId = btn.id.replace('btn-show-add-', 'add-') + '-form';
-                document.getElementById(formId).style.display = 'grid';
-            })
-        );
+        document.getElementById('btn-show-add-customer').addEventListener('click', () => {
+            const form = document.getElementById('add-customer-form');
+            form.reset();
+            form.style.display = 'grid';
+            document.getElementById('customer-id-input').focus();
+        });
+        document.getElementById('btn-show-add-product').addEventListener('click', () => document.getElementById('add-product-form').style.display = 'grid');
+        document.getElementById('btn-show-add-order').addEventListener('click', () => document.getElementById('add-order-form').style.display = 'grid');
         
         document.getElementById('add-customer-form').addEventListener('submit', async e => {
             e.preventDefault();
@@ -894,12 +992,15 @@
             submitBtn.disabled = true;
 
             const id = document.getElementById('customer-id-input').value.toUpperCase();
+            
+            if (!id) {
+                Swal.fire({ icon: 'error', title: 'ข้อมูลไม่ครบถ้วน', text: 'กรุณากรอกรหัสสมาชิก!' });
+                submitBtn.disabled = false;
+                return;
+            }
+
             if (getCustomer(id)) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'ข้อมูลซ้ำ',
-                    text: 'รหัสสมาชิกนี้มีอยู่ในระบบแล้ว!'
-                });
+                Swal.fire({ icon: 'error', title: 'ข้อมูลซ้ำ', text: 'รหัสสมาชิกนี้มีอยู่ในระบบแล้ว!' });
                 submitBtn.disabled = false;
                 return;
             }
@@ -912,12 +1013,16 @@
             });
 
             Swal.fire({ icon: 'success', title: 'เพิ่มลูกค้าสำเร็จ!', showConfirmButton: false, timer: 1500 });
-            renderCustomerTable(); 
+             
             populateSelectOptions(); 
+            form.style.display = 'none';
             form.reset();
+            
+            const totalPages = Math.ceil(db.customers.length / adminPaginationState.customers.itemsPerPage);
+            renderCustomerTable(totalPages);
+
             await saveDataToGoogleSheet();
             submitBtn.disabled = false;
-            document.getElementById('customer-id-input').focus();
         });
 
         document.getElementById('add-product-form').addEventListener('submit', async e => {
@@ -926,7 +1031,7 @@
             const submitBtn = form.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
             
-            const id = `P${String((db.products?.length || 0) + 1).padStart(3, '0')}`;
+            const id = generateNewProductId();
 
             db.products.push({
                 id: id, name: document.getElementById('product-name').value,
@@ -1111,7 +1216,17 @@
 
                         db[type] = db[type].filter(item => item.id !== id);
                         
-                        renderAllAdminContent();
+                        if(type === 'customers') {
+                            const { currentPage, itemsPerPage } = adminPaginationState.customers;
+                            const totalItems = db.customers.length;
+                            const totalPages = Math.ceil(totalItems / itemsPerPage);
+                            let pageToRender = currentPage > totalPages ? totalPages : currentPage;
+                            if (pageToRender < 1) pageToRender = 1;
+                            renderCustomerTable(pageToRender);
+                        } else {
+                            renderAllAdminContent();
+                        }
+
                         await saveDataToGoogleSheet();
                         Swal.fire(
                             'ลบแล้ว!',
@@ -1335,7 +1450,59 @@
                     Swal.close();
                     hiddenContainer.innerHTML = ''; // Clean up
                 });
+            } else if (btn.classList.contains('pagination-btn')) {
+                const type = btn.dataset.type;
+                const page = parseInt(btn.dataset.page, 10);
+                if (type === 'customers') {
+                    renderCustomerTable(page);
+                }
             }
+        });
+        
+        document.getElementById('print-customer-list-btn').addEventListener('click', () => {
+            const printContent = `
+                <div id="customer-list-printable" class="p-8">
+                    <div class="text-center mb-8">
+                        <img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="Logo" class="h-16 w-auto mx-auto mb-2">
+                        <h2 class="text-2xl font-bold text-slate-800">รายชื่อสมาชิกทั้งหมด</h2>
+                        <p class="text-slate-500">${storeSettings.name}</p>
+                        <p class="text-sm text-slate-500">ณ วันที่ ${new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="p-2 text-left font-semibold">รหัส</th>
+                                <th class="p-2 text-left font-semibold">ชื่อ-นามสกุล</th>
+                                <th class="p-2 text-left font-semibold">ที่อยู่</th>
+                                <th class="p-2 text-right font-semibold">ยอดซื้อสะสม</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(db.customers || []).map(c => `
+                                <tr class="border-b">
+                                    <td class="p-2">${c.id}</td>
+                                    <td class="p-2">${c.name}</td>
+                                    <td class="p-2">${c.address}</td>
+                                    <td class="p-2 text-right">${calculateCustomerTotalSpending(c.id).toLocaleString('th-TH')} บาท</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            const modal = document.getElementById('document-modal');
+            const backdrop = document.getElementById('document-modal-backdrop');
+            
+            modal.innerHTML = `
+                ${printContent}
+                <div class="flex justify-end space-x-4 mt-4 p-4 print-hide">
+                    <button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ปิด</button>
+                    <button class="print-doc-btn bg-gray-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-600 flex items-center space-x-2"><i data-lucide="printer"></i><span>ปริ้น</span></button>
+                </div>
+            `;
+            
+            openModal('document');
         });
 
         document.addEventListener('click', (e) => {
@@ -1354,13 +1521,13 @@
             if(!modal) return;
             
             if (type === 'document') {
-                const order = db.orders.find(o => o.id === data.id);
-                if (order) { 
-                    modal.innerHTML = data.type === 'receipt' ? generateReceiptHTML(order) : generateInvoiceHTML(order);
-                    modal.dataset.orderId = data.id; 
-                } else { 
-                     return;
-                }
+                if(data && data.id) { // Check if order data is provided
+                    const order = db.orders.find(o => o.id === data.id);
+                    if (order) { 
+                        modal.innerHTML = data.type === 'receipt' ? generateReceiptHTML(order) : generateInvoiceHTML(order);
+                        modal.dataset.orderId = data.id; 
+                    } else { return; }
+                } // If no data.id, it's a generic modal like the print list, which sets its own content.
             } else if (type === 'status-history') {
                  const order = db.orders.find(o => o.id === data);
                  document.getElementById('status-history-order-id').textContent = `รหัสสั่งซื้อ: ${order.id}`;
@@ -1757,3 +1924,4 @@
 
 </body>
 </html>
+
