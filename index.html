@@ -11,6 +11,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: 'Sarabun', sans-serif;
@@ -238,17 +240,17 @@
                             </div>
                         </div>
                         <div class="flex flex-col md:flex-row justify-end items-center gap-4 mb-6">
-                            <button id="btn-save-to-sheet" class="w-full sm:w-auto bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-teal-600 disabled:opacity-50">
-                                <svg id="save-loader" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                <i data-lucide="database" id="save-icon"></i>
-                                <span id="save-text">ซิงค์ข้อมูล</span>
+                            <button id="btn-save-to-sheet" class="w-full sm:w-auto bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-teal-600">
+                                <i data-lucide="database"></i>
+                                <span>ซิงค์ข้อมูล</span>
                             </button>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                             <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-blue-100 p-3 rounded-full"><i data-lucide="users" class="w-8 h-8 text-blue-500"></i></div><div><h4 class="font-semibold text-gray-500">จำนวนลูกค้า</h4><p id="report-total-customers" class="text-3xl font-bold text-gray-800"></p></div></div>
                             <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-green-100 p-3 rounded-full"><i data-lucide="package" class="w-8 h-8 text-green-500"></i></div><div><h4 class="font-semibold text-gray-500">จำนวนสินค้า</h4><p id="report-total-products" class="text-3xl font-bold text-gray-800"></p></div></div>
                             <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-yellow-100 p-3 rounded-full"><i data-lucide="shopping-cart" class="w-8 h-8 text-yellow-500"></i></div><div><h4 class="font-semibold text-gray-500">คำสั่งซื้อ</h4><p id="report-total-orders" class="text-3xl font-bold text-gray-800"></p></div></div>
                             <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-indigo-100 p-3 rounded-full"><i data-lucide="dollar-sign" class="w-8 h-8 text-indigo-500"></i></div><div><h4 class="font-semibold text-gray-500">ยอดขาย</h4><p id="report-total-sales" class="text-3xl font-bold text-gray-800"></p></div></div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-red-100 p-3 rounded-full"><i data-lucide="package-x" class="w-8 h-8 text-red-500"></i></div><div><h4 class="font-semibold text-gray-500">สินค้าใกล้หมด</h4><p id="report-low-stock-products" class="text-3xl font-bold text-gray-800"></p></div></div>
                         </div>
                         <h3 class="text-2xl font-bold mb-4">ลูกค้า Top 5 (ตามช่วงวันที่)</h3>
                         <div id="report-top-customers" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8"></div>
@@ -267,10 +269,12 @@
                             <input type="text" id="customer-id-input" placeholder="รหัสสมาชิก (เช่น C004)" class="p-2 border rounded-lg" required>
                             <input type="text" id="customer-name" placeholder="ชื่อ-นามสกุล" class="p-2 border rounded-lg" required>
                             <textarea id="customer-address" placeholder="ที่อยู่" class="p-2 border rounded-lg md:col-span-2" required rows="3"></textarea>
-                            <button type="submit" class="bg-blue-600 text-white p-3 rounded-lg md:col-span-2 flex items-center justify-center space-x-2">
-                                <div class="upload-loader animate-spin h-5 w-5 text-white" role="status"></div>
-                                <span>บันทึกข้อมูลลูกค้า</span>
-                            </button>
+                            <div class="md:col-span-2 flex items-center gap-2">
+                                <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-lg flex items-center justify-center space-x-2">
+                                    <span>บันทึกข้อมูลลูกค้า</span>
+                                </button>
+                                <button type="button" class="close-form-btn bg-gray-300 text-gray-800 p-3 rounded-lg hover:bg-gray-400">ปิด</button>
+                            </div>
                         </form>
                         <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-blue-100"><tr><th class="p-3 text-left">รหัส</th><th class="p-3 text-left">ชื่อ</th><th class="p-3 text-left">ที่อยู่</th><th class="p-3 text-left">การกระทำ</th></tr></thead><tbody id="admin-customers-table"></tbody></table></div>
                     </div>
@@ -281,15 +285,18 @@
                             <h3 class="text-2xl font-bold">จัดการข้อมูลสินค้า</h3>
                             <button id="btn-show-add-product" class="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-600"><i data-lucide="plus"></i><span>เพิ่มสินค้า</span></button>
                         </div>
-                        <form id="add-product-form" class="add-form bg-green-50 p-4 rounded-lg mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" id="product-name" placeholder="ชื่อสินค้า" class="p-2 border rounded-lg" required>
+                        <form id="add-product-form" class="add-form bg-green-50 p-4 rounded-lg mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input type="text" id="product-name" placeholder="ชื่อสินค้า" class="p-2 border rounded-lg md:col-span-3" required>
                             <input type="number" id="product-price" placeholder="ราคา" min="0" class="p-2 border rounded-lg" required>
-                            <button type="submit" class="bg-green-600 text-white p-3 rounded-lg md:col-span-2 flex items-center justify-center space-x-2">
-                                <div class="upload-loader animate-spin h-5 w-5 text-white" role="status"></div>
-                                <span>บันทึกข้อมูลสินค้า</span>
-                            </button>
+                            <input type="number" id="product-stock" placeholder="จำนวนสต๊อก" min="0" class="p-2 border rounded-lg" required>
+                             <div class="md:col-span-3 flex items-center gap-2">
+                                <button type="submit" class="w-full bg-green-600 text-white p-3 rounded-lg flex items-center justify-center space-x-2">
+                                    <span>บันทึกข้อมูลสินค้า</span>
+                                </button>
+                                <button type="button" class="close-form-btn bg-gray-300 text-gray-800 p-3 rounded-lg hover:bg-gray-400">ปิด</button>
+                            </div>
                         </form>
-                        <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-green-100"><tr><th class="p-3 text-left">รหัส</th><th class="p-3 text-left">ชื่อสินค้า</th><th class="p-3 text-left">ราคา</th><th class="p-3 text-left">การกระทำ</th></tr></thead><tbody id="admin-products-table"></tbody></table></div>
+                        <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-green-100"><tr><th class="p-3 text-left">รหัส</th><th class="p-3 text-left">ชื่อสินค้า</th><th class="p-3 text-left">ราคา</th><th class="p-3 text-left">สต๊อก</th><th class="p-3 text-left">การกระทำ</th></tr></thead><tbody id="admin-products-table"></tbody></table></div>
                     </div>
 
                     <!-- Order Management -->
@@ -352,9 +359,12 @@
                                     <span>บาท</span>
                                 </div>
                                  <textarea id="order-payment-details" placeholder="รายละเอียดชำระเงิน (ถ้ามี)" class="p-2 border rounded-lg w-full" rows="2"></textarea>
-                                <button type="submit" class="bg-yellow-600 text-white p-3 rounded-lg w-full font-bold flex items-center justify-center space-x-2 text-lg">
-                                    <i data-lucide="save"></i> <span>บันทึกคำสั่งซื้อ</span>
-                                </button>
+                                 <div class="flex items-center gap-2">
+                                    <button type="submit" class="w-full bg-yellow-600 text-white p-3 rounded-lg font-bold flex items-center justify-center space-x-2 text-lg">
+                                        <i data-lucide="save"></i> <span>บันทึกคำสั่งซื้อ</span>
+                                    </button>
+                                     <button type="button" class="close-form-btn bg-gray-300 text-gray-800 p-3 rounded-lg hover:bg-gray-400">ปิด</button>
+                                </div>
                             </div>
                         </form>
 
@@ -432,6 +442,21 @@
             <button id="save-status-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700">บันทึก</button>
         </div>
     </div>
+    
+    <div id="edit-stock-modal-backdrop" class="modal-backdrop"></div>
+    <div id="edit-stock-modal" class="modal bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-1/3 max-w-lg">
+        <h3 class="text-xl font-bold mb-2">แก้ไขสต็อกสินค้า</h3>
+        <p id="edit-stock-product-name" class="text-sm text-gray-500 mb-4"></p>
+        <input type="hidden" id="edit-stock-product-id-input">
+        <div>
+            <label for="edit-stock-quantity" class="block text-sm font-medium text-gray-700">จำนวนคงเหลือใหม่</label>
+            <input type="number" id="edit-stock-quantity" min="0" class="w-full p-2 border rounded-lg bg-white mt-1">
+        </div>
+        <div class="flex justify-end space-x-4 mt-6">
+            <button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ยกเลิก</button>
+            <button id="save-stock-btn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700">บันทึก</button>
+        </div>
+    </div>
 
     <div id="admin-password-modal-backdrop" class="modal-backdrop"></div>
     <div id="admin-password-modal" class="modal bg-white p-8 rounded-2xl shadow-lg max-w-sm w-11/12">
@@ -464,6 +489,7 @@
             name: "สมุนไพรรักษ์ธรรม",
             address: "123 หมู่ 4 ต.ในเมือง\nอ.เมือง จ.นครราชสีมา 30000",
             googleScriptUrl: "https://script.google.com/macros/s/AKfycbyc3S8zNGo8N7wFN6EcZIVLjIH3ZoQa_bon1e-aUpztk_nHX1fDR14PzFlszVpFWIZf/exec",
+            lowStockThreshold: 5,
         };
         
         // This will be populated from Google Sheet
@@ -644,7 +670,11 @@
                 customerLogin.classList.add('hidden');
                 customerDetails.classList.remove('hidden');
             } else {
-                alert('ไม่พบรหัสสมาชิกนี้');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ไม่พบข้อมูล',
+                    text: 'ไม่พบรหัสสมาชิกนี้ในระบบ'
+                });
             }
         });
         
@@ -686,11 +716,25 @@
 
         function renderProductTable() {
             const table = document.getElementById('admin-products-table');
-            table.innerHTML = (db.products || []).map(p => `
+            table.innerHTML = (db.products || []).map(p => {
+                const isLowStock = p.stock <= storeSettings.lowStockThreshold;
+                const stockClass = isLowStock ? 'text-red-600 font-bold' : '';
+                const lowStockBadge = isLowStock ? '<span class="ml-2 text-xs bg-red-100 text-red-800 font-semibold px-2 py-0.5 rounded-full">ใกล้หมด</span>' : '';
+                
+                return `
                 <tr class="hover:bg-green-50">
-                <td class="p-3 font-mono">${p.id}</td><td class="p-3">${p.name}</td><td class="p-3">${p.price.toLocaleString()} บาท</td>
-                <td class="p-3"><button class="delete-btn text-red-500 hover:text-red-700" data-type="products" data-id="${p.id}"><i data-lucide="trash-2" class="w-5 h-5"></i></button></td></tr>
-            `).join('');
+                    <td class="p-3 font-mono">${p.id}</td>
+                    <td class="p-3">${p.name}</td>
+                    <td class="p-3">${p.price.toLocaleString()} บาท</td>
+                    <td class="p-3 ${stockClass}">${p.stock} ${lowStockBadge}</td>
+                    <td class="p-3">
+                        <div class="flex items-center space-x-2">
+                            <button class="edit-stock-btn text-blue-500 hover:text-blue-700" data-product-id="${p.id}" title="แก้ไขสต็อก"><i data-lucide="edit" class="w-5 h-5"></i></button>
+                            <button class="delete-btn text-red-500 hover:text-red-700" data-type="products" data-id="${p.id}" title="ลบสินค้า"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
             lucide.createIcons();
         }
         
@@ -750,6 +794,10 @@
             document.getElementById('report-total-orders').textContent = ordersToRender.length;
             const totalSales = ordersToRender.reduce((sum, order) => sum + calculateOrderTotal(order), 0);
             document.getElementById('report-total-sales').textContent = `${totalSales.toLocaleString()} ฿`;
+            
+            const lowStockCount = (db.products || []).filter(p => p.stock <= storeSettings.lowStockThreshold).length;
+            document.getElementById('report-low-stock-products').textContent = lowStockCount;
+
 
             const customerSpending = (db.customers || []).map(c => ({
                 ...c,
@@ -810,13 +858,13 @@
             const customerSelect = document.getElementById('order-customer-id');
             customerSelect.innerHTML = '<option value="">เลือกลูกค้า...</option>' + (db.customers || []).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
             const productSelect = document.getElementById('order-product-id');
-            productSelect.innerHTML = '<option value="">เลือกสินค้า...</option>' + (db.products || []).map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            productSelect.innerHTML = '<option value="">เลือกสินค้า...</option>' + (db.products || []).filter(p => p.stock > 0).map(p => `<option value="${p.id}">${p.name} (คงเหลือ: ${p.stock})</option>`).join('');
         }
         
         document.querySelectorAll('[id^="btn-show-add-"]').forEach(btn => 
             btn.addEventListener('click', () => {
                 const formId = btn.id.replace('btn-show-add-', 'add-') + '-form';
-                document.getElementById(formId).style.display = 'block';
+                document.getElementById(formId).style.display = 'grid';
             })
         );
         
@@ -828,7 +876,11 @@
 
             const id = document.getElementById('customer-id-input').value.toUpperCase();
             if (getCustomer(id)) {
-                alert('รหัสสมาชิกนี้มีอยู่แล้ว!');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อมูลซ้ำ',
+                    text: 'รหัสสมาชิกนี้มีอยู่ในระบบแล้ว!'
+                });
                 submitBtn.disabled = false;
                 return;
             }
@@ -840,9 +892,13 @@
                 profilePic: ''
             });
 
-            renderCustomerTable(); populateSelectOptions(); form.reset(); form.style.display = 'none';
+            Swal.fire({ icon: 'success', title: 'เพิ่มลูกค้าสำเร็จ!', showConfirmButton: false, timer: 1500 });
+            renderCustomerTable(); 
+            populateSelectOptions(); 
+            form.reset();
             await saveDataToGoogleSheet();
             submitBtn.disabled = false;
+            document.getElementById('customer-id-input').focus();
         });
 
         document.getElementById('add-product-form').addEventListener('submit', async e => {
@@ -856,11 +912,16 @@
             db.products.push({
                 id: id, name: document.getElementById('product-name').value,
                 price: parseFloat(document.getElementById('product-price').value),
+                stock: parseInt(document.getElementById('product-stock').value, 10),
                 imageUrl: ''
             });
-            renderProductTable(); populateSelectOptions(); e.target.reset(); e.target.style.display = 'none';
+            Swal.fire({ icon: 'success', title: 'เพิ่มสินค้าสำเร็จ!', showConfirmButton: false, timer: 1500 });
+            renderProductTable(); 
+            populateSelectOptions(); 
+            form.reset();
             await saveDataToGoogleSheet();
             submitBtn.disabled = false;
+            document.getElementById('product-name').focus();
         });
 
         // --- New Order Multi-Item Logic ---
@@ -907,11 +968,29 @@
             const quantity = parseInt(document.getElementById('order-quantity').value, 10);
 
             if (!productId || !quantity || quantity < 1) {
-                alert('กรุณาเลือกสินค้าและระบุจำนวนที่ถูกต้อง');
+                 Swal.fire({
+                    icon: 'warning',
+                    title: 'ข้อมูลไม่ถูกต้อง',
+                    text: 'กรุณาเลือกสินค้าและระบุจำนวนที่ถูกต้อง'
+                });
                 return;
             }
 
+            const product = getProduct(productId);
             const existingItem = newOrderItems.find(item => item.productId === productId);
+            const currentQuantityInOrder = existingItem ? existingItem.quantity : 0;
+            const totalRequired = currentQuantityInOrder + quantity;
+
+            if (totalRequired > product.stock) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'สินค้าไม่เพียงพอ',
+                    text: `สินค้า '${product.name}' มีในสต๊อกเพียง ${product.stock} ชิ้น (คุณมีในตะกร้าแล้ว ${currentQuantityInOrder} ชิ้น)`
+                });
+                return;
+            }
+
+
             if (existingItem) {
                 existingItem.quantity += quantity;
             } else {
@@ -937,15 +1016,27 @@
             e.preventDefault();
             
             if (newOrderItems.length === 0) {
-                alert('กรุณาเพิ่มสินค้าอย่างน้อย 1 รายการ');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่มีสินค้า',
+                    text: 'กรุณาเพิ่มสินค้าอย่างน้อย 1 รายการในคำสั่งซื้อ'
+                });
                 return;
             }
+
+            // Deduct stock
+            newOrderItems.forEach(item => {
+                const product = getProduct(item.productId);
+                if (product) {
+                    product.stock -= item.quantity;
+                }
+            });
 
             const newOrder = {
                 id: `ORD-${Date.now()}`, 
                 customerId: document.getElementById('order-customer-id').value,
                 date: new Date().toISOString().split('T')[0],
-                items: newOrderItems, // Use the new items array
+                items: [...newOrderItems],
                 status: "รับคำสั่งซื้อ",
                 paymentDetails: document.getElementById('order-payment-details').value,
                 receiptId: null, 
@@ -956,34 +1047,66 @@
                 statusHistory: [{ status: "รับคำสั่งซื้อ", date: new Date().toISOString().split('T')[0] }]
             };
             db.orders.push(newOrder);
+
+            Swal.fire({ icon: 'success', title: 'บันทึกคำสั่งซื้อสำเร็จ!', showConfirmButton: false, timer: 1500 });
             
             renderOrderTable(db.orders); 
+            renderProductTable(); 
+            populateSelectOptions(); 
             
-            // Reset form and items list
             newOrderItems = [];
             renderNewOrderItemsList();
             e.target.reset(); 
-            e.target.style.display = 'none';
-
+            
             await saveDataToGoogleSheet();
         });
 
 
-        adminSection.addEventListener('click', async (e) => {
+        adminSection.addEventListener('click', (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
 
             if (btn.classList.contains('delete-btn')) {
-                if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?')) {
-                    const { type, id } = btn.dataset;
-                    db[type] = db[type].filter(item => item.id !== id);
-                    renderAllAdminContent();
-                    await saveDataToGoogleSheet();
-                }
+                 Swal.fire({
+                    title: 'ยืนยันการลบ',
+                    text: "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'ใช่, ลบเลย!',
+                    cancelButtonText: 'ยกเลิก'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        const { type, id } = btn.dataset;
+                        
+                        if (type === 'orders') {
+                            const orderToDelete = db.orders.find(o => o.id === id);
+                            if (orderToDelete && orderToDelete.items) {
+                                orderToDelete.items.forEach(item => {
+                                    const product = getProduct(item.productId);
+                                    if(product) product.stock += item.quantity;
+                                });
+                            }
+                        }
+
+                        db[type] = db[type].filter(item => item.id !== id);
+                        
+                        renderAllAdminContent();
+                        await saveDataToGoogleSheet();
+                        Swal.fire(
+                            'ลบแล้ว!',
+                            'รายการของคุณถูกลบเรียบร้อยแล้ว.',
+                            'success'
+                        )
+                    }
+                });
             } else if (btn.classList.contains('view-status-history-btn')) {
                 openModal('status-history', btn.dataset.orderId);
             } else if (btn.classList.contains('edit-status-btn')) {
                 openModal('edit-status', btn.dataset.orderId);
+            } else if (btn.classList.contains('edit-stock-btn')) {
+                openModal('edit-stock', btn.dataset.productId);
             }
         });
 
@@ -1028,31 +1151,53 @@
         // --- Google Drive & Sheet Connection Logic ---
         async function saveDataToGoogleSheet(isManual = false) {
             if (!storeSettings.googleScriptUrl) {
-                if(isManual) alert('Google Apps Script URL ไม่ได้ถูกตั้งค่า!');
+                if(isManual) Swal.fire({
+                    icon: 'warning',
+                    title: 'การตั้งค่าไม่สมบูรณ์',
+                    text: 'Google Apps Script URL ไม่ได้ถูกตั้งค่า!'
+                });
                 return;
             }
+
             const payload = { action: 'saveDb', data: db };
-            const saveButton = document.getElementById('btn-save-to-sheet');
-            const saveIcon = document.getElementById('save-icon');
-            const saveLoader = document.getElementById('save-loader');
-            const saveText = document.getElementById('save-text');
             
-            saveButton.disabled = true; saveIcon.style.display = 'none'; saveLoader.style.display = 'block';
-            if(isManual) saveText.textContent = 'กำลังซิงค์...';
+            if (isManual) {
+                 Swal.fire({
+                    title: 'กำลังซิงค์ข้อมูล...',
+                    text: 'กรุณารอสักครู่',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading() }
+                });
+            }
             
             try {
                 const res = await fetch(storeSettings.googleScriptUrl, {
                     method: 'POST', 
                     body: JSON.stringify(payload),
                 });
-                if (isManual) alert('ซิงค์ข้อมูลสำเร็จ!');
+                 const result = await res.json();
+                 if (result.status !== 'success') {
+                    throw new Error(result.message || 'Unknown error from server');
+                 }
+
+                if (isManual) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'ซิงค์ข้อมูลสำเร็จ!',
+                        showConfirmButton: false,
+                        timer: 1500
+                    });
+                }
                 console.log("DB data saved successfully at " + new Date().toLocaleTimeString());
             } catch (error) {
                 console.error('Error saving DB:', error);
-                if (isManual) alert('เกิดข้อผิดพลาดในการซิงค์ข้อมูล');
-            } finally {
-                saveButton.disabled = false; saveIcon.style.display = 'block'; saveLoader.style.display = 'none';
-                if(isManual) saveText.textContent = 'ซิงค์ข้อมูล';
+                if (isManual) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ผิดพลาด',
+                        text: `เกิดข้อผิดพลาดในการซิงค์ข้อมูล: ${error.message}`
+                    });
+                }
             }
         }
         document.getElementById('btn-save-to-sheet').addEventListener('click', () => saveDataToGoogleSheet(true));
@@ -1153,6 +1298,15 @@
                 window.print();
             }
         });
+
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.close-form-btn');
+            if (btn) {
+                const form = btn.closest('.add-form');
+                form.style.display = 'none';
+                form.reset();
+            }
+        });
         
         // --- Modal Control ---
         function openModal(type, data) {
@@ -1201,6 +1355,12 @@
                  document.getElementById('edit-tracking-number').value = order.trackingNumber || '';
                  toggleShippingInfo(statusToSelect);
                  toggleOtherShippingInput();
+            } else if (type === 'edit-stock') {
+                const productId = data;
+                const product = getProduct(productId);
+                document.getElementById('edit-stock-product-name').textContent = product.name;
+                document.getElementById('edit-stock-product-id-input').value = productId;
+                document.getElementById('edit-stock-quantity').value = product.stock;
             }
 
             modal.style.display = 'block';
@@ -1257,6 +1417,7 @@
             
             const updated = await updateOrderStatus(orderId, newStatus, shippingInfo);
             if(updated) {
+                Swal.fire({ icon: 'success', title: 'อัปเดตสถานะสำเร็จ!', showConfirmButton: false, timer: 1500 });
                 renderAllAdminContent();
                 const customerId = db.orders.find(o => o.id === orderId)?.customerId;
                 if(customerId && !customerDetails.classList.contains('hidden')){
@@ -1266,6 +1427,32 @@
             }
             closeModal('edit-status');
         });
+
+        // --- Edit Stock Modal Logic ---
+        document.getElementById('save-stock-btn').addEventListener('click', async () => {
+            const productId = document.getElementById('edit-stock-product-id-input').value;
+            const newStock = parseInt(document.getElementById('edit-stock-quantity').value, 10);
+
+            if (isNaN(newStock) || newStock < 0) {
+                 Swal.fire({
+                    icon: 'error',
+                    title: 'ข้อมูลไม่ถูกต้อง',
+                    text: 'กรุณากรอกจำนวนสต็อกเป็นตัวเลข 0 หรือมากกว่า'
+                });
+                return;
+            }
+
+            const product = getProduct(productId);
+            if (product) {
+                product.stock = newStock;
+                Swal.fire({ icon: 'success', title: 'บันทึกสต็อกสำเร็จ!', showConfirmButton: false, timer: 1500 });
+                renderProductTable();
+                populateSelectOptions();
+                await saveDataToGoogleSheet();
+            }
+            closeModal('edit-stock');
+        });
+
 
         // --- Report Filtering & Export Logic ---
         document.getElementById('filter-report-btn').addEventListener('click', () => {
@@ -1288,7 +1475,11 @@
             const endDate = document.getElementById('report-end-date').value;
 
             if(!startDate || !endDate) {
-                alert('กรุณาเลือกช่วงวันที่ก่อนสร้างรายงาน');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ข้อมูลไม่ครบถ้วน',
+                    text: 'กรุณาเลือกช่วงวันที่ก่อนสร้างรายงาน'
+                });
                 return;
             }
             const modal = document.getElementById('document-modal');
@@ -1304,7 +1495,11 @@
             const endDate = document.getElementById('report-end-date').value;
 
             if (!startDate || !endDate) {
-                alert('กรุณาเลือกช่วงวันที่ก่อนสร้างรายงาน');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'ข้อมูลไม่ครบถ้วน',
+                    text: 'กรุณาเลือกช่วงวันที่ก่อนสร้างรายงาน'
+                });
                 return;
             }
 
@@ -1365,7 +1560,13 @@
 
             localStorage.setItem('storeSettings', JSON.stringify(settingsToSave));
             updateStoreInfoUI();
-            alert('บันทึกการตั้งค่าเรียบร้อยแล้ว');
+            Swal.fire({
+                icon: 'success',
+                title: 'บันทึกสำเร็จ!',
+                text: 'บันทึกการตั้งค่าเรียบร้อยแล้ว',
+                showConfirmButton: false,
+                timer: 1500
+            });
         });
         
         // --- Initial Data Load from Google Sheet ---
@@ -1384,6 +1585,15 @@
                 if (data.status === 'error') throw new Error(data.message);
 
                 db = data;
+                
+                if (db.products) {
+                    db.products.forEach(p => {
+                        if (typeof p.stock === 'undefined') {
+                            p.stock = 0; 
+                        }
+                    });
+                }
+
 
                 renderAllAdminContent(); 
                 
@@ -1401,7 +1611,11 @@
 
             } catch (error) {
                 console.error("Failed to load data:", error);
-                if(!isRefresh) alert("ไม่สามารถโหลดข้อมูลจาก Google Sheet ได้: " + error.message);
+                if(!isRefresh) Swal.fire({
+                    icon: 'error',
+                    title: 'โหลดข้อมูลล้มเหลว',
+                    text: 'ไม่สามารถโหลดข้อมูลจาก Google Sheet ได้: ' + error.message
+                });
             } finally {
                 if (!isRefresh) {
                     loader.style.display = 'none';
