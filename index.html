@@ -325,7 +325,7 @@
                                     <input type="text" id="order-employee-name" placeholder="ชื่อผู้ดำเนินการ" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg" required>
                                 </div>
                             </div>
-                    
+                        
                             <!-- Add Item Section -->
                             <div class="border-t border-b border-yellow-200 py-4 grid grid-cols-1 sm:grid-cols-5 gap-2 items-end">
                                 <div class="sm:col-span-3">
@@ -342,7 +342,7 @@
                                     <i data-lucide="plus"></i> <span>เพิ่ม</span>
                                 </button>
                             </div>
-                    
+                        
                             <!-- Items List -->
                             <div class="space-y-2">
                                 <h4 class="font-bold">รายการสินค้าในออเดอร์</h4>
@@ -350,7 +350,7 @@
                                     <p class="text-gray-500 text-center py-4">ยังไม่มีรายการสินค้า</p>
                                 </div>
                             </div>
-                    
+                        
                             <!-- Total and Payment -->
                             <div class="border-t pt-4 space-y-4">
                                 <div class="text-right text-xl font-bold text-gray-800">
@@ -374,15 +374,30 @@
                     <!-- Settings Management -->
                     <div id="mgmt-section-settings" class="mgmt-section">
                         <h3 class="text-2xl font-bold mb-4">ตั้งค่าระบบ</h3>
-                        <div class="space-y-6 max-w-lg">
+                        <div class="space-y-6 max-w-2xl">
                             <div class="p-6 bg-gray-50 rounded-lg border">
                                 <h4 class="font-bold text-lg mb-2">ข้อมูลร้านค้า</h4>
                                 <div class="space-y-4">
                                     <div><label for="store-name-input" class="block text-sm font-medium text-gray-700">ชื่อร้านค้า</label><input type="text" id="store-name-input" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
                                     <div><label for="store-address-input" class="block text-sm font-medium text-gray-700">ที่อยู่ร้านค้า (รองรับหลายบรรทัด)</label><textarea id="store-address-input" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></textarea></div>
                                 </div>
+                                <button id="save-settings-btn" class="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 flex items-center space-x-2"><i data-lucide="save"></i><span>บันทึกการตั้งค่าร้านค้า</span></button>
                             </div>
-                            <button id="save-settings-btn" class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 flex items-center space-x-2 text-lg"><i data-lucide="save"></i><span>บันทึกการตั้งค่า</span></button>
+                             <!-- NEW: Backup Section -->
+                            <div class="p-6 bg-red-50 rounded-lg border border-red-200">
+                                <div class="flex items-center space-x-3">
+                                    <i data-lucide="folder-archive" class="w-8 h-8 text-red-600"></i>
+                                    <h4 class="font-bold text-lg text-red-800">สำรองข้อมูลเอกสารไปยัง Google Drive</h4>
+                                </div>
+                                <p class="text-sm text-red-700 my-4">
+                                    ระบบจะสร้างไฟล์ PDF ของใบสั่งซื้อและใบเสร็จ **ทั้งหมด** ที่มีอยู่ในระบบ และบันทึกลงใน Google Drive Folder ที่คุณตั้งค่าไว้ในสคริปต์ (ตัวแปร `GOOGLE_DRIVE_FOLDER_ID`)
+                                    <br><strong>คำเตือน:</strong> หากมีไฟล์ชื่อซ้ำกันอยู่แล้ว ไฟล์เก่าจะถูกลบและแทนที่ด้วยไฟล์ใหม่ การดำเนินการนี้อาจใช้เวลานานขึ้นอยู่กับจำนวนข้อมูล
+                                </p>
+                                <button id="backup-to-drive-btn" class="w-full bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 flex items-center justify-center space-x-2 text-lg">
+                                    <i data-lucide="upload-cloud"></i>
+                                    <span>เริ่มการสำรองข้อมูลทั้งหมด</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -624,10 +639,14 @@
                 `;
 
                 let actionButtons = `
-                    <button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="file-text" class="w-4 h-4"></i> <span>ใบสั่งซื้อ</span></button>
+                    <button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบสั่งซื้อ</span></button>
+                    <button class="customer-download-btn w-full text-center text-sm bg-indigo-500 text-white px-3 py-1.5 rounded-md hover:bg-indigo-600 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="download" class="w-4 h-4"></i> <span>โหลดใบสั่งซื้อ</span></button>
                 `;
                 if (order.receiptId) {
-                    actionButtons += `<button class="view-doc-btn w-full text-center text-sm bg-teal-500 text-white px-3 py-1.5 rounded-md hover:bg-teal-600 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="receipt" class="w-4 h-4"></i> <span>ใบเสร็จ</span></button>`;
+                    actionButtons += `
+                        <button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบเสร็จ</span></button>
+                        <button class="customer-download-btn w-full text-center text-sm bg-teal-500 text-white px-3 py-1.5 rounded-md hover:bg-teal-600 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="receipt" class="w-4 h-4"></i> <span>โหลดใบเสร็จ</span></button>
+                    `;
                 }
 
                 historyContainer.innerHTML += `
@@ -650,7 +669,7 @@
                     </div>
                     <div class="border-t pt-4">
                         ${order.shippingProvider ? `<div class="mb-4 text-sm bg-gray-50 p-3 rounded-lg"><strong>การจัดส่ง:</strong> ${order.shippingProvider} - ${order.trackingNumber || 'ไม่มีเลขพัสดุ'}</div>` : ''}
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${actionButtons}</div>
+                        <div class="grid grid-cols-2 gap-2">${actionButtons}</div>
                     </div>
                 </div>`;
             });
@@ -809,7 +828,7 @@
             document.getElementById('report-top-customers').innerHTML = customerSpending.map((c, i) => `
                 <div class="bg-white p-4 rounded-xl shadow-lg text-center flex flex-col justify-between">
                      <div class="w-20 h-20 rounded-full mx-auto mb-2 border-4 ${['border-amber-300', 'border-slate-300', 'border-amber-500'][i] || 'border-gray-200'} bg-gray-100 flex items-center justify-center">
-                        <i data-lucide="user" class="w-10 h-10 text-gray-500"></i>
+                         <i data-lucide="user" class="w-10 h-10 text-gray-500"></i>
                      </div>
                     <div>
                         <p class="font-bold text-gray-800">${c.name}</p>
@@ -1177,7 +1196,7 @@
                 });
                  const result = await res.json();
                  if (result.status !== 'success') {
-                    throw new Error(result.message || 'Unknown error from server');
+                   throw new Error(result.message || 'Unknown error from server');
                  }
 
                 if (isManual) {
@@ -1296,6 +1315,26 @@
                 html2pdf().from(content).set(opt).save();
             } else if(btn.classList.contains('print-doc-btn')) {
                 window.print();
+            } else if (btn.classList.contains('customer-download-btn')) {
+                const orderId = btn.dataset.orderId;
+                const docType = btn.dataset.docType;
+                const order = db.orders.find(o => o.id === orderId);
+                if (!order) return;
+
+                const htmlGenerator = docType === 'receipt' ? generateReceiptHTML : generateInvoiceHTML;
+                const htmlContent = htmlGenerator(order);
+                const hiddenContainer = document.getElementById('pdf-container');
+                hiddenContainer.innerHTML = htmlContent;
+
+                const contentToPrint = hiddenContainer.querySelector('.printable-content > div');
+                const filename = docType === 'receipt' ? `ใบเสร็จ_${order.receiptId}.pdf` : `ใบสั่งซื้อ_${order.id}.pdf`;
+                const opt = { margin: 0.2, filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+
+                Swal.fire({ title: 'กำลังสร้าง PDF...', text: 'กรุณารอสักครู่', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                html2pdf().from(contentToPrint).set(opt).save().then(() => {
+                    Swal.close();
+                    hiddenContainer.innerHTML = ''; // Clean up
+                });
             }
         });
 
@@ -1332,11 +1371,11 @@
                  document.getElementById('edit-status-order-id').textContent = `รหัสสั่งซื้อ: ${order.id}`;
                  document.getElementById('edit-status-order-id-input').value = order.id;
                  const select = document.getElementById('edit-status-select');
-                 
+                
                  const statusToSelect = order.status;
 
                  select.innerHTML = ALL_STATUSES.map(s => `<option value="${s}" ${s === statusToSelect ? 'selected' : ''}>${s}</option>`).join('');
-                 
+                
                  const shippingProviderSelect = document.getElementById('edit-shipping-provider-select');
                  const otherShippingInput = document.getElementById('edit-shipping-provider-other');
 
@@ -1346,10 +1385,10 @@
 
                  const knownProviders = ['Flash', 'J&T', 'EMS'];
                  if (order.shippingProvider && !knownProviders.includes(order.shippingProvider)) {
-                    shippingProviderSelect.value = 'อื่นๆ';
-                    otherShippingInput.value = order.shippingProvider;
+                     shippingProviderSelect.value = 'อื่นๆ';
+                     otherShippingInput.value = order.shippingProvider;
                  } else {
-                    shippingProviderSelect.value = order.shippingProvider || 'Flash';
+                     shippingProviderSelect.value = order.shippingProvider || 'Flash';
                  }
 
                  document.getElementById('edit-tracking-number').value = order.trackingNumber || '';
@@ -1374,8 +1413,8 @@
              if (modal) modal.style.display = 'none';
              if (backdrop) backdrop.style.display = 'none';
              if(type === 'admin-password') {
-                adminPasswordInput.value = '';
-                passwordError.classList.add('hidden');
+                 adminPasswordInput.value = '';
+                 passwordError.classList.add('hidden');
              }
         }
         document.querySelectorAll('.modal-backdrop').forEach(bd => bd.addEventListener('click', () => closeModal(bd.id.replace('-modal-backdrop', ''))));
@@ -1568,6 +1607,66 @@
                 timer: 1500
             });
         });
+
+        // --- NEW: Backup to Drive Logic ---
+        document.getElementById('backup-to-drive-btn').addEventListener('click', () => {
+            Swal.fire({
+                title: 'ยืนยันการสำรองข้อมูล',
+                html: "คุณต้องการสำรองข้อมูลเอกสารทั้งหมด (ใบสั่งซื้อและใบเสร็จ) ลง Google Drive หรือไม่?<br>ขั้นตอนนี้อาจใช้เวลาสักครู่",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c0392b',
+                cancelButtonColor: '#3498db',
+                confirmButtonText: 'ใช่, เริ่มเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    backupAllDocuments();
+                }
+            });
+        });
+
+        async function backupAllDocuments() {
+            Swal.fire({
+                title: 'กำลังสำรองข้อมูล...',
+                text: 'ระบบกำลังสร้างและบันทึกไฟล์ PDF กรุณาอย่าปิดหน้านี้',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const payload = {
+                action: 'backupDocuments',
+                data: db,
+                settings: storeSettings
+            };
+
+            try {
+                const res = await fetch(storeSettings.googleScriptUrl, {
+                    method: 'POST',
+                    body: JSON.stringify(payload),
+                });
+                const result = await res.json();
+
+                if (result.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำรองข้อมูลสำเร็จ!',
+                        text: result.message,
+                    });
+                } else {
+                    throw new Error(result.message || 'Unknown error from server');
+                }
+            } catch (error) {
+                console.error('Backup failed:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'การสำรองข้อมูลล้มเหลว',
+                    text: `เกิดข้อผิดพลาด: ${error.message}`
+                });
+            }
+        }
         
         // --- Initial Data Load from Google Sheet ---
         async function loadDataFromGoogleSheet(isRefresh = false) {
@@ -1658,4 +1757,3 @@
 
 </body>
 </html>
-
