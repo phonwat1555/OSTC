@@ -268,6 +268,11 @@
                                 <button id="btn-show-add-customer" class="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-600"><i data-lucide="plus"></i><span>เพิ่มลูกค้า</span></button>
                             </div>
                         </div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <input type="text" id="search-customer-id" placeholder="ค้นหารหัสสมาชิก..." class="p-2 border rounded-lg w-full">
+                            <button id="search-customer-btn" class="bg-indigo-500 text-white p-2 rounded-lg hover:bg-indigo-600"><i data-lucide="search"></i></button>
+                            <button id="reset-customer-search-btn" class="bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600"><i data-lucide="rotate-cw"></i></button>
+                        </div>
                         <form id="add-customer-form" class="add-form bg-blue-50 p-4 rounded-lg mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="text" id="customer-id-input" placeholder="รหัสสมาชิก (เช่น C014)" class="p-2 border rounded-lg" required>
                             <input type="text" id="customer-name" placeholder="ชื่อ-นามสกุล" class="p-2 border rounded-lg" required>
@@ -414,7 +419,7 @@
 
     <!-- Modals -->
     <div id="document-modal-backdrop" class="modal-backdrop"></div>
-    <div id="document-modal" class="modal bg-gray-100 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-w-4xl max-h-[90vh] overflow-y-auto printable-area"></div>
+    <div id="document-modal" class="modal bg-gray-100 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-w-4xl max-h-[90vh] overflow-y-auto"></div>
 
     <div id="status-history-modal-backdrop" class="modal-backdrop"></div>
     <div id="status-history-modal" class="modal bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-1/3 max-w-lg">
@@ -501,6 +506,12 @@
         </form>
     </div>
 
+    <!-- Customer History Modal -->
+    <div id="customer-history-modal-backdrop" class="modal-backdrop"></div>
+    <div id="customer-history-modal" class="modal bg-gray-50 rounded-2xl shadow-2xl w-11/12 md:w-3/4 max-w-5xl max-h-[90vh] flex flex-col">
+        <!-- Content is generated dynamically by JavaScript -->
+    </div>
+
 
     <script>
         // --- Store Settings ---
@@ -526,6 +537,7 @@
         let adminPaginationState = {
             customers: { currentPage: 1, itemsPerPage: 10 },
         };
+        let currentCustomerSource = [];
 
         // --- Utility Functions ---
         const getCustomer = (id) => db.customers.find(c => c.id === id);
@@ -619,6 +631,84 @@
             }
             return false;
         }
+        
+        function generateOrderCardHTML(order) {
+            const total = calculateOrderTotal(order);
+            const statusIcons = {
+                "รับคำสั่งซื้อ": "file-plus-2",
+                "ชำระเงินแล้ว": "credit-card",
+                "จัดส่งแล้ว": "truck",
+                "ลูกค้าได้รับแล้ว": "package-check",
+            };
+
+            const productInfoHTML = (order.items || []).map(item => {
+                const product = getProduct(item.productId);
+                return product ? `<p class="text-sm text-gray-600 truncate">${item.quantity} x ${product.name}</p>` : '';
+            }).join('');
+
+            const currentStatusIndex = ALL_STATUSES.indexOf(order.status);
+            const statusTimelineHTML = `
+                <div class="w-full mt-4">
+                    <div class="flex">
+                        ${ALL_STATUSES.map((status, index) => {
+                            const isCompleted = index <= currentStatusIndex;
+                            const circleClass = isCompleted ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-gray-300';
+                            const iconClass = isCompleted ? 'text-white' : 'text-gray-400';
+                            const lineClass = (index < currentStatusIndex) ? 'bg-indigo-600' : 'bg-gray-300';
+                            const textClass = isCompleted ? 'text-gray-800' : 'text-gray-400';
+
+                            return `
+                                <div class="flex-1 flex items-center">
+                                    ${index > 0 ? `<div class="flex-1 h-1 ${lineClass}"></div>` : ''}
+                                    <div class="relative">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 ${circleClass} transition-all duration-300">
+                                            <i data-lucide="${statusIcons[status] || 'help-circle'}" class="w-5 h-5 ${iconClass}"></i>
+                                        </div>
+                                        <p class="absolute -bottom-6 w-20 text-center text-xs ${textClass} font-semibold" style="left: 50%; transform: translateX(-50%);">${status}</p>
+                                    </div>
+                                    ${index < ALL_STATUSES.length - 1 ? `<div class="flex-1 h-1 ${lineClass}"></div>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+
+            let actionButtons = `
+                <button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบสั่งซื้อ</span></button>
+                <button class="customer-download-btn w-full text-center text-sm bg-indigo-500 text-white px-3 py-1.5 rounded-md hover:bg-indigo-600 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="download" class="w-4 h-4"></i> <span>โหลดใบสั่งซื้อ</span></button>
+            `;
+            if (order.receiptId) {
+                actionButtons += `
+                    <button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบเสร็จ</span></button>
+                    <button class="customer-download-btn w-full text-center text-sm bg-teal-500 text-white px-3 py-1.5 rounded-md hover:bg-teal-600 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="receipt" class="w-4 h-4"></i> <span>โหลดใบเสร็จ</span></button>
+                `;
+            }
+
+            return `
+            <div class="border rounded-xl p-4 sm:p-6 bg-white transition-shadow duration-300 hover:shadow-lg">
+                <div class="flex justify-between items-start border-b pb-4">
+                    <div>
+                        <p class="font-bold text-gray-800">รหัสสั่งซื้อ: <span class="text-indigo-600">${order.id}</span></p>
+                        <p class="text-sm text-gray-500">วันที่: ${formatDate(order.date)}</p>
+                    </div>
+                    <div class="text-right flex-shrink-0 ml-2">
+                         <p class="text-lg font-bold text-gray-800">${total.toLocaleString()} บาท</p>
+                         <p class="text-xs text-gray-500">${order.items.length} รายการ</p>
+                    </div>
+                </div>
+                <div class="pt-6 pb-8">
+                    <div class="mb-8">
+                       ${productInfoHTML}
+                    </div>
+                    ${statusTimelineHTML}
+                </div>
+                <div class="border-t pt-4">
+                    ${order.shippingProvider ? `<div class="mb-4 text-sm bg-gray-50 p-3 rounded-lg"><strong>การจัดส่ง:</strong> ${order.shippingProvider} - ${order.trackingNumber || 'ไม่มีเลขพัสดุ'}</div>` : ''}
+                    <div class="grid grid-cols-2 gap-2">${actionButtons}</div>
+                </div>
+            </div>`;
+        }
 
         function renderCustomerHistory(customerId) {
             const historyContainer = document.getElementById('purchase-history');
@@ -630,83 +720,12 @@
                 return;
             }
 
-            customerOrders.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(order => {
-                const total = calculateOrderTotal(order);
-                const statusIcons = {
-                    "รับคำสั่งซื้อ": "file-plus-2",
-                    "ชำระเงินแล้ว": "credit-card",
-                    "จัดส่งแล้ว": "truck",
-                    "ลูกค้าได้รับแล้ว": "package-check",
-                };
+            customerOrders
+                .sort((a,b) => new Date(b.date) - new Date(a.date))
+                .forEach(order => {
+                    historyContainer.innerHTML += generateOrderCardHTML(order);
+                });
 
-                const productInfoHTML = (order.items || []).map(item => {
-                    const product = getProduct(item.productId);
-                    return product ? `<p class="text-sm text-gray-600 truncate">${item.quantity} x ${product.name}</p>` : '';
-                }).join('');
-
-                const currentStatusIndex = ALL_STATUSES.indexOf(order.status);
-                const statusTimelineHTML = `
-                    <div class="w-full mt-4">
-                        <div class="flex">
-                            ${ALL_STATUSES.map((status, index) => {
-                                const isCompleted = index <= currentStatusIndex;
-                                const circleClass = isCompleted ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-gray-300';
-                                const iconClass = isCompleted ? 'text-white' : 'text-gray-400';
-                                const lineClass = (index < currentStatusIndex) ? 'bg-indigo-600' : 'bg-gray-300';
-                                const textClass = isCompleted ? 'text-gray-800' : 'text-gray-400';
-
-                                return `
-                                    <div class="flex-1 flex items-center">
-                                        ${index > 0 ? `<div class="flex-1 h-1 ${lineClass}"></div>` : ''}
-                                        <div class="relative">
-                                            <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 ${circleClass} transition-all duration-300">
-                                                <i data-lucide="${statusIcons[status] || 'help-circle'}" class="w-5 h-5 ${iconClass}"></i>
-                                            </div>
-                                            <p class="absolute -bottom-6 w-20 text-center text-xs ${textClass} font-semibold" style="left: 50%; transform: translateX(-50%);">${status}</p>
-                                        </div>
-                                        ${index < ALL_STATUSES.length - 1 ? `<div class="flex-1 h-1 ${lineClass}"></div>` : ''}
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `;
-
-                let actionButtons = `
-                    <button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบสั่งซื้อ</span></button>
-                    <button class="customer-download-btn w-full text-center text-sm bg-indigo-500 text-white px-3 py-1.5 rounded-md hover:bg-indigo-600 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="download" class="w-4 h-4"></i> <span>โหลดใบสั่งซื้อ</span></button>
-                `;
-                if (order.receiptId) {
-                    actionButtons += `
-                        <button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบเสร็จ</span></button>
-                        <button class="customer-download-btn w-full text-center text-sm bg-teal-500 text-white px-3 py-1.5 rounded-md hover:bg-teal-600 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="receipt" class="w-4 h-4"></i> <span>โหลดใบเสร็จ</span></button>
-                    `;
-                }
-
-                historyContainer.innerHTML += `
-                <div class="border rounded-xl p-4 sm:p-6 bg-white transition-shadow duration-300 hover:shadow-lg">
-                    <div class="flex justify-between items-start border-b pb-4">
-                        <div>
-                            <p class="font-bold text-gray-800">รหัสสั่งซื้อ: <span class="text-indigo-600">${order.id}</span></p>
-                            <p class="text-sm text-gray-500">วันที่: ${formatDate(order.date)}</p>
-                        </div>
-                        <div class="text-right flex-shrink-0 ml-2">
-                             <p class="text-lg font-bold text-gray-800">${total.toLocaleString()} บาท</p>
-                             <p class="text-xs text-gray-500">${order.items.length} รายการ</p>
-                        </div>
-                    </div>
-                    <div class="pt-6 pb-8">
-                        <div class="mb-8">
-                           ${productInfoHTML}
-                        </div>
-                        ${statusTimelineHTML}
-                    </div>
-                    <div class="border-t pt-4">
-                        ${order.shippingProvider ? `<div class="mb-4 text-sm bg-gray-50 p-3 rounded-lg"><strong>การจัดส่ง:</strong> ${order.shippingProvider} - ${order.trackingNumber || 'ไม่มีเลขพัสดุ'}</div>` : ''}
-                        <div class="grid grid-cols-2 gap-2">${actionButtons}</div>
-                    </div>
-                </div>`;
-            });
             lucide.createIcons();
         }
 
@@ -750,6 +769,7 @@
         adminMainBtns.forEach(btn => btn.addEventListener('click', () => switchAdminSection(btn.dataset.target)));
 
         function renderAllAdminContent() {
+            currentCustomerSource = db.customers || [];
             renderCustomerTable();
             renderProductTable();
             renderOrderTable(db.orders);
@@ -771,14 +791,12 @@
 
             let paginationHTML = '';
             
-            // Previous button
             paginationHTML += `
                 <button class="pagination-btn p-2 rounded-md ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-300 hover:bg-indigo-500 hover:text-white'}" data-type="${type}" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>
                     <i data-lucide="chevron-left" class="w-5 h-5 pointer-events-none"></i>
                 </button>
             `;
 
-            // Page numbers
             for (let i = 1; i <= totalPages; i++) {
                 paginationHTML += `
                     <button class="pagination-btn px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base ${i === currentPage ? 'bg-indigo-600 text-white' : 'bg-gray-200 hover:bg-indigo-500 hover:text-white'}" data-type="${type}" data-page="${i}">
@@ -787,7 +805,6 @@
                 `;
             }
 
-            // Next button
             paginationHTML += `
                 <button class="pagination-btn p-2 rounded-md ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-300 hover:bg-indigo-500 hover:text-white'}" data-type="${type}" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>
                     <i data-lucide="chevron-right" class="w-5 h-5 pointer-events-none"></i>
@@ -800,7 +817,7 @@
 
         function renderCustomerTable(page = 1) {
             const table = document.getElementById('admin-customers-table');
-            const customers = db.customers || [];
+            const customers = currentCustomerSource || [];
             
             adminPaginationState.customers.currentPage = page;
             const { currentPage, itemsPerPage } = adminPaginationState.customers;
@@ -818,9 +835,14 @@
                     <td class="p-3 text-sm">${c.address}</td>
                     <td class="p-3 text-right font-semibold text-indigo-600">${totalSpending.toLocaleString('th-TH')} ฿</td>
                     <td class="p-3">
-                        <button class="delete-btn text-red-500 hover:text-red-700" data-type="customers" data-id="${c.id}">
-                            <i data-lucide="trash-2" class="w-5 h-5"></i>
-                        </button>
+                        <div class="flex items-center space-x-2">
+                             <button class="view-customer-history-btn text-blue-500 hover:text-blue-700 p-1" data-customer-id="${c.id}" title="ดูประวัติ">
+                                <i data-lucide="history" class="w-5 h-5"></i>
+                            </button>
+                            <button class="delete-btn text-red-500 hover:text-red-700 p-1" data-type="customers" data-id="${c.id}" title="ลบ">
+                                <i data-lucide="trash-2" class="w-5 h-5"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `}).join('');
@@ -896,6 +918,22 @@
             }
 
             renderOrderTable(filteredOrders);
+        });
+
+        document.getElementById('search-customer-btn').addEventListener('click', () => {
+            const query = document.getElementById('search-customer-id').value.trim().toUpperCase();
+            if (query) {
+                currentCustomerSource = db.customers.filter(c => c.id.toUpperCase().includes(query));
+            } else {
+                currentCustomerSource = db.customers;
+            }
+            renderCustomerTable(1);
+        });
+
+        document.getElementById('reset-customer-search-btn').addEventListener('click', () => {
+            document.getElementById('search-customer-id').value = '';
+            currentCustomerSource = db.customers;
+            renderCustomerTable(1);
         });
 
         let currentFilteredOrders = [...(db.orders || [])];
@@ -1018,6 +1056,7 @@
             form.style.display = 'none';
             form.reset();
             
+            currentCustomerSource = db.customers;
             const totalPages = Math.ceil(db.customers.length / adminPaginationState.customers.itemsPerPage);
             renderCustomerTable(totalPages);
 
@@ -1217,8 +1256,9 @@
                         db[type] = db[type].filter(item => item.id !== id);
                         
                         if(type === 'customers') {
+                            currentCustomerSource = db.customers;
                             const { currentPage, itemsPerPage } = adminPaginationState.customers;
-                            const totalItems = db.customers.length;
+                            const totalItems = currentCustomerSource.length;
                             const totalPages = Math.ceil(totalItems / itemsPerPage);
                             let pageToRender = currentPage > totalPages ? totalPages : currentPage;
                             if (pageToRender < 1) pageToRender = 1;
@@ -1241,6 +1281,8 @@
                 openModal('edit-status', btn.dataset.orderId);
             } else if (btn.classList.contains('edit-stock-btn')) {
                 openModal('edit-stock', btn.dataset.productId);
+            } else if (btn.classList.contains('view-customer-history-btn')) {
+                openCustomerHistoryModal(btn.dataset.customerId);
             }
         });
 
@@ -1461,7 +1503,7 @@
         
         document.getElementById('print-customer-list-btn').addEventListener('click', () => {
             const printContent = `
-                <div id="customer-list-printable" class="p-8">
+                <div id="customer-list-printable" class="p-8 printable-area">
                     <div class="text-center mb-8">
                         <img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="Logo" class="h-16 w-auto mx-auto mb-2">
                         <h2 class="text-2xl font-bold text-slate-800">รายชื่อสมาชิกทั้งหมด</h2>
@@ -1492,7 +1534,6 @@
             `;
 
             const modal = document.getElementById('document-modal');
-            const backdrop = document.getElementById('document-modal-backdrop');
             
             modal.innerHTML = `
                 ${printContent}
@@ -1659,6 +1700,156 @@
             closeModal('edit-stock');
         });
 
+        function openCustomerHistoryModal(customerId) {
+            const customer = getCustomer(customerId);
+            if (!customer) return;
+
+            const modal = document.getElementById('customer-history-modal');
+            
+            modal.innerHTML = `
+                <div class="p-6 border-b bg-white rounded-t-2xl flex-shrink-0">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-800">ประวัติการซื้อ: ${customer.name}</h3>
+                            <p class="text-sm text-gray-500">รหัสสมาชิก: ${customer.id}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <button id="print-history-btn" class="bg-blue-500 text-white px-3 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-600">
+                                <i data-lucide="printer"></i><span>พิมพ์ประวัติ</span>
+                            </button>
+                            <button class="close-modal-btn text-gray-400 hover:text-gray-600 p-2" onclick="closeModal('customer-history')">&times;</button>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div id="history-summary-box" class="bg-indigo-50 p-4 rounded-lg text-center">
+                            <!-- Summary Title -->
+                            <h4 id="history-summary-title" class="font-semibold text-gray-600"></h4>
+                            <!-- Summary Value -->
+                            <p id="history-total-spending" class="text-2xl font-bold text-indigo-700"></p>
+                        </div>
+                        <div class="bg-gray-100 p-4 rounded-lg md:col-span-2 flex items-center gap-2">
+                            <input type="date" id="history-start-date" class="p-2 border rounded-lg text-sm w-full">
+                            <span class="text-gray-500">ถึง</span>
+                            <input type="date" id="history-end-date" class="p-2 border rounded-lg text-sm w-full">
+                            <button id="filter-history-btn" class="bg-indigo-500 text-white p-2 rounded-lg hover:bg-indigo-600 flex-shrink-0" title="ค้นหา"><i data-lucide="search"></i></button>
+                            <button id="reset-history-btn" class="bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 flex-shrink-0" title="ล้าง"><i data-lucide="rotate-cw"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div id="admin-customer-history-list" class="p-6 overflow-y-auto space-y-4 flex-grow">
+                    <!-- History items will be rendered here -->
+                </div>
+            `;
+            
+            const filterAndRender = () => {
+                const startDate = modal.querySelector('#history-start-date').value;
+                const endDate = modal.querySelector('#history-end-date').value;
+                const allOrders = db.orders.filter(o => o.customerId === customerId);
+                
+                let filteredOrders = allOrders;
+                let summaryTitle = 'ยอดซื้อสะสมทั้งหมด';
+
+                if (startDate && endDate) {
+                    filteredOrders = allOrders.filter(order => {
+                        const orderDate = order.date.split('T')[0];
+                        return orderDate >= startDate && orderDate <= endDate;
+                    });
+                    summaryTitle = 'ยอดซื้อในช่วงวันที่เลือก';
+                }
+                
+                const totalSpendingForPeriod = filteredOrders.reduce((sum, order) => sum + calculateOrderTotal(order), 0);
+                modal.querySelector('#history-summary-title').textContent = summaryTitle;
+                modal.querySelector('#history-total-spending').textContent = `${totalSpendingForPeriod.toLocaleString('th-TH')} บาท`;
+
+                renderAdminCustomerHistory(filteredOrders);
+            };
+
+            modal.querySelector('#filter-history-btn').addEventListener('click', filterAndRender);
+
+            modal.querySelector('#reset-history-btn').addEventListener('click', () => {
+                modal.querySelector('#history-start-date').value = '';
+                modal.querySelector('#history-end-date').value = '';
+                filterAndRender();
+            });
+
+            modal.querySelector('#print-history-btn').addEventListener('click', () => {
+                const startDate = modal.querySelector('#history-start-date').value;
+                const endDate = modal.querySelector('#history-end-date').value;
+                const title = modal.querySelector('#history-summary-title').textContent;
+                const total = modal.querySelector('#history-total-spending').textContent;
+                const listContent = modal.querySelector('#admin-customer-history-list').innerHTML;
+                
+                generateAndPrintCustomerHistory(customer, listContent, title, total, startDate, endDate);
+            });
+
+            filterAndRender(); // Initial render
+            openModal('customer-history');
+        }
+
+        function renderAdminCustomerHistory(ordersToRender) {
+            const historyContainer = document.getElementById('admin-customer-history-list');
+            if (!historyContainer) return;
+            
+            historyContainer.innerHTML = '';
+            
+            if (ordersToRender.length === 0) {
+                historyContainer.innerHTML = `<p class="text-center text-gray-500 py-8">ไม่พบประวัติการสั่งซื้อในช่วงเวลาที่เลือก</p>`;
+                return;
+            }
+            
+            ordersToRender
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .forEach(order => {
+                    historyContainer.innerHTML += generateOrderCardHTML(order);
+                });
+            
+            lucide.createIcons();
+        }
+
+        function generateAndPrintCustomerHistory(customer, listHTML, summaryTitle, summaryTotal, startDate, endDate) {
+             const dateRangeText = (startDate && endDate) 
+                ? `สำหรับวันที่ ${formatDate(startDate)} ถึง ${formatDate(endDate)}` 
+                : 'ทั้งหมด';
+
+            const printHtml = `
+                <div class="p-8 bg-white">
+                    <div class="text-center mb-8">
+                        <img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="Logo" class="h-16 w-auto mx-auto mb-2">
+                        <h2 class="text-2xl font-bold text-slate-800">ประวัติการซื้อสินค้า</h2>
+                        <p class="text-lg font-semibold">${customer.name} (${customer.id})</p>
+                        <p class="text-slate-500">${storeSettings.name}</p>
+                        <p class="text-sm text-slate-500">ช่วงวันที่: ${dateRangeText}</p>
+                    </div>
+                    <div class="bg-indigo-50 p-4 rounded-lg text-center mb-6 border border-indigo-200">
+                        <h4 class="font-semibold text-gray-600">${summaryTitle}</h4>
+                        <p class="text-2xl font-bold text-indigo-700">${summaryTotal}</p>
+                    </div>
+                    <div class="space-y-4">
+                        ${listHTML.replace(/data-lucide/g, 'data-lucide-dummy')}
+                    </div>
+                </div>`;
+            
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = printHtml;
+
+            // Remove interactive elements for printing
+            tempContainer.querySelectorAll('button').forEach(btn => btn.remove());
+            
+            const opt = { 
+                margin: 0.5, 
+                filename: `ประวัติการซื้อ_${customer.id}.pdf`, 
+                image: { type: 'jpeg', quality: 0.98 }, 
+                html2canvas: { scale: 2 }, 
+                jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } 
+            };
+            
+            Swal.fire({ title: 'กำลังสร้าง PDF...', text: 'กรุณารอสักครู่', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+            html2pdf().from(tempContainer).set(opt).save().then(() => {
+                Swal.close();
+            });
+        }
+
 
         // --- Report Filtering & Export Logic ---
         document.getElementById('filter-report-btn').addEventListener('click', () => {
@@ -1709,7 +1900,6 @@
                 return;
             }
 
-            // --- Sheet 1: Sales Report by Order ---
             const orderHeaders = ["วันที่", "รหัสสั่งซื้อ", "ลูกค้า", "ผู้ดำเนินการ", "ยอดรวม (บาท)"];
             const orderData = currentFilteredOrders.map(order => {
                 const customer = getCustomer(order.customerId);
@@ -1727,7 +1917,6 @@
             const ws_orders = XLSX.utils.aoa_to_sheet([orderHeaders, ...orderData]);
             ws_orders['!cols'] = [{ wch: 20 }, { wch: 25 }, { wch: 30 }, { wch: 20 }, { wch: 15 }];
             
-            // --- Sheet 2: Sales Report by Product ---
             const productHeaders = ["รหัสสินค้า", "ชื่อสินค้า", "ราคาต่อหน่วย", "จำนวนที่ขายได้", "ยอดขายรวม (บาท)"];
             const productData = currentProductSales.map(sale => [
                 sale.product.id,
@@ -1775,7 +1964,6 @@
             });
         });
 
-        // --- NEW: Backup to Drive Logic ---
         document.getElementById('backup-to-drive-btn').addEventListener('click', () => {
             Swal.fire({
                 title: 'ยืนยันการสำรองข้อมูล',
