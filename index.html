@@ -7,7 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- ใช้ฟอนต์ Inter เป็นหลัก และ Sarabun สำหรับภาษาไทย -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Sarabun:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -15,7 +16,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
-            font-family: 'Sarabun', sans-serif;
+            /* อัปเดตฟอนต์ */
+            font-family: 'Inter', 'Sarabun', sans-serif;
         }
         .mgmt-section, .add-form {
             display: none;
@@ -35,8 +37,10 @@
             transition: all 0.3s ease;
         }
         .admin-main-btn.active {
-            background-color: #4f46e5; color: white;
-            box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
+            /* อัปเดตสี Active (Blue) */
+            background-color: #2563eb; 
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.4);
         }
         #save-loader, .upload-loader, #initial-loader {
             display: none;
@@ -47,7 +51,7 @@
             left: 50%;
             transform: translate(-50%, -50%) rotate(-45deg);
             font-size: 8rem;
-            color: rgba(0, 128, 0, 0.1);
+            color: rgba(0, 128, 0, 0.1); /* สีเขียวสำหรับใบเสร็จ */
             font-weight: bold;
             pointer-events: none;
             z-index: 0;
@@ -88,8 +92,9 @@
             border: 2px solid #9ca3af; /* gray-400 */
         }
          .timeline-item.completed .timeline-icon {
-            border-color: #22c55e; /* green-500 */
-            background-color: #22c55e;
+             /* อัปเดตสี (Emerald) */
+            border-color: #10b981; 
+            background-color: #10b981;
         }
         
         /* Print Styles */
@@ -120,13 +125,15 @@
         }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
+<!-- อัปเดตพื้นหลังและสีข้อความหลัก -->
+<body class="bg-gray-50 text-slate-700">
 
     <!-- Main Container -->
     <div class="container mx-auto p-4 md:p-8">
         
         <div id="initial-loader" class="text-center py-16">
-            <svg class="animate-spin mx-auto h-12 w-12 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <!-- อัปเดตสี Loader -->
+            <svg class="animate-spin mx-auto h-12 w-12 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
@@ -135,23 +142,27 @@
 
         <div id="main-content" class="hidden">
             <header class="text-center mb-8">
-                <img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" border="0" class="mx-auto h-24 w-auto mb-4">
-                <h2 id="header-store-name" class="text-3xl font-semibold text-teal-700 mb-2">สมุนไพรรักษ์ธรรม</h2>
-                <h1 class="text-4xl font-bold text-slate-700">ระบบตรวจสอบการซื้อสินค้า</h1>
-                <p class="text-slate-500">สำหรับลูกค้าและผู้ดูแลระบบ</p>
+                <!-- ปรับขนาดโลโก้ -->
+                <img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" border="0" class="mx-auto h-20 w-auto mb-4">
+                <!-- อัปเดตสี Header -->
+                <h2 id="header-store-name" class="text-3xl font-semibold text-blue-700 mb-2">สมุนไพรรักษ์ธรรม</h2>
+                <h1 class="text-4xl font-bold text-slate-800">ระบบตรวจสอบการซื้อสินค้า</h1>
+                <p class="text-slate-600">สำหรับลูกค้าและผู้ดูแลระบบ</p>
             </header>
 
-            <div class="flex justify-center mb-6 bg-white p-2 rounded-xl shadow-md max-w-sm mx-auto">
-                <button id="customer-view-btn" class="w-1/2 p-2 rounded-lg text-white bg-indigo-500 shadow">มุมมองลูกค้า</button>
-                <button id="admin-view-btn" class="w-1/2 p-2 rounded-lg text-indigo-500">มุมมองผู้ดูแล</button>
+            <!-- อัปเดตดีไซน์ View Switcher -->
+            <div class="flex justify-center mb-6 bg-white p-2 rounded-xl shadow-md max-w-md mx-auto">
+                <button id="customer-view-btn" class="w-1/2 p-2 rounded-lg text-white bg-blue-600 shadow-md">มุมมองลูกค้า</button>
+                <button id="admin-view-btn" class="w-1/2 p-2 rounded-lg text-blue-600 hover:bg-blue-50">มุมมองผู้ดูแล</button>
             </div>
 
             <!-- Customer View -->
             <div id="customer-section">
                 <div id="customer-login" class="bg-white p-8 rounded-2xl shadow-lg max-w-md mx-auto">
                     <div class="text-center mb-6">
-                        <div class="mx-auto bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center">
-                            <i data-lucide="user-check" class="text-indigo-500 w-8 h-8"></i>
+                        <!-- อัปเดตสีไอคอน -->
+                        <div class="mx-auto bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center">
+                            <i data-lucide="user-check" class="text-blue-500 w-8 h-8"></i>
                         </div>
                         <h2 class="text-2xl font-bold mt-4">ตรวจสอบข้อมูลสมาชิก</h2>
                         <p class="text-gray-500">กรุณากรอกรหัสสมาชิกของคุณ</p>
@@ -159,30 +170,35 @@
                     <div class="space-y-4">
                         <div>
                             <label for="member-id" class="block text-sm font-medium text-gray-700">รหัสสมาชิก</label>
-                            <input type="text" id="member-id" class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" placeholder="เช่น C001">
+                            <!-- อัปเดตสี focus -->
+                            <input type="text" id="member-id" class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="เช่น C001">
                         </div>
-                        <button id="check-member-btn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center space-x-2">
+                        <!-- อัปเดตสีปุ่ม -->
+                        <button id="check-member-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transform hover:scale-105 transition duration-300 flex items-center justify-center space-x-2">
                             <i data-lucide="search"></i>
                             <span>ตรวจสอบข้อมูล</span>
                         </button>
                     </div>
                 </div>
                 <div id="customer-details" class="hidden">
-                    <button id="back-to-login-btn" class="mb-4 bg-gray-200 text-gray-800 font-bold py-2 px-4 rounded-lg hover:bg-gray-300 flex items-center space-x-2">
+                    <!-- อัปเดตดีไซน์ปุ่ม -->
+                    <button id="back-to-login-btn" class="mb-4 bg-white border border-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-50 flex items-center space-x-2">
                         <i data-lucide="arrow-left"></i>
                         <span>กลับไปหน้าหลัก</span>
                     </button>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div class="lg:col-span-1">
                             <div class="bg-white p-6 rounded-2xl shadow-lg text-center">
-                                <div class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-indigo-200 bg-gray-100 flex items-center justify-center">
-                                    <i data-lucide="user" class="w-16 h-16 text-gray-400"></i>
+                                <!-- อัปเดตสี Profile -->
+                                <div class="w-32 h-32 rounded-full mx-auto mb-4 border-4 border-blue-200 bg-gray-100 flex items-center justify-center">
+                                    <i data-lucide="user" class="w-16 h-16 text-slate-400"></i>
                                 </div>
                                 <h3 id="profile-name" class="text-2xl font-bold"></h3>
                                 <p id="profile-id" class="text-gray-500 mb-4"></p>
                                 <div class="text-left space-y-2">
                                     <div class="flex items-start space-x-3">
-                                        <i data-lucide="map-pin" class="text-indigo-500 w-5 h-5 mt-1 flex-shrink-0"></i>
+                                        <!-- อัปเดตสีไอคอน -->
+                                        <i data-lucide="map-pin" class="text-blue-500 w-5 h-5 mt-1 flex-shrink-0"></i>
                                         <div>
                                             <h4 class="font-semibold">ที่อยู่ในการจัดส่ง</h4>
                                             <p id="profile-address" class="text-gray-600"></p>
@@ -194,7 +210,8 @@
                         <div class="lg:col-span-2">
                             <div class="bg-white p-6 rounded-2xl shadow-lg">
                                 <div class="flex items-center space-x-3 mb-4">
-                                    <i data-lucide="history" class="text-indigo-500 w-8 h-8"></i>
+                                    <!-- อัปเดตสีไอคอน -->
+                                    <i data-lucide="history" class="text-blue-500 w-8 h-8"></i>
                                     <h3 class="text-2xl font-bold">ประวัติการซื้อสินค้า</h3>
                                 </div>
                                 <div id="purchase-history" class="space-y-4"></div>
@@ -209,19 +226,20 @@
                 <div id="admin-content" class="bg-white p-6 rounded-2xl shadow-lg hidden">
                     <!-- Admin Main Buttons -->
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-6">
-                        <button class="admin-main-btn flex items-center justify-center space-x-2 p-4 rounded-lg bg-gray-200 text-gray-700 font-bold active" data-target="report">
+                        <!-- อัปเดตดีไซน์ปุ่มเมนูหลัก -->
+                        <button class="admin-main-btn flex items-center justify-center space-x-2 p-4 rounded-lg bg-white border border-gray-300 text-slate-700 font-bold active" data-target="report">
                             <i data-lucide="bar-chart-3"></i><span>รายงานสรุป</span>
                         </button>
-                        <button class="admin-main-btn flex items-center justify-center space-x-2 p-4 rounded-lg bg-gray-200 text-gray-700 font-bold" data-target="customers">
+                        <button class="admin-main-btn flex items-center justify-center space-x-2 p-4 rounded-lg bg-white border border-gray-300 text-slate-700 font-bold" data-target="customers">
                             <i data-lucide="users"></i><span>จัดการลูกค้า</span>
                         </button>
-                        <button class="admin-main-btn flex items-center justify-center space-x-2 p-4 rounded-lg bg-gray-200 text-gray-700 font-bold" data-target="products">
+                        <button class="admin-main-btn flex items-center justify-center space-x-2 p-4 rounded-lg bg-white border border-gray-300 text-slate-700 font-bold" data-target="products">
                             <i data-lucide="package"></i><span>จัดการสินค้า</span>
                         </button>
-                        <button class="admin-main-btn flex items-center justify-center space-x-2 p-4 rounded-lg bg-gray-200 text-gray-700 font-bold" data-target="orders">
+                        <button class="admin-main-btn flex items-center justify-center space-x-2 p-4 rounded-lg bg-white border border-gray-300 text-slate-700 font-bold" data-target="orders">
                             <i data-lucide="shopping-cart"></i><span>จัดการคำสั่งซื้อ</span>
                         </button>
-                        <button class="admin-main-btn flex items-center justify-center space-x-2 p-4 rounded-lg bg-gray-200 text-gray-700 font-bold" data-target="settings">
+                        <button class="admin-main-btn flex items-center justify-center space-x-2 p-4 rounded-lg bg-white border border-gray-300 text-slate-700 font-bold" data-target="settings">
                             <i data-lucide="settings"></i><span>ตั้งค่า</span>
                         </button>
                     </div>
@@ -234,22 +252,25 @@
                                 <input type="date" id="report-start-date" class="p-2 border rounded-lg text-sm w-full sm:w-auto">
                                 <span class="text-gray-500 hidden sm:inline">ถึง</span>
                                 <input type="date" id="report-end-date" class="p-2 border rounded-lg text-sm w-full sm:w-auto">
-                                <button id="filter-report-btn" class="bg-indigo-500 text-white p-2 rounded-lg hover:bg-indigo-600 flex-shrink-0" title="ค้นหา"><i data-lucide="search"></i></button>
-                                <button id="export-pdf-report-btn" class="bg-red-500 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-red-600" title="Export PDF"><i data-lucide="file-type-2"></i><span>PDF</span></button>
-                                <button id="export-excel-report-btn" class="bg-green-700 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-green-800" title="Export Excel"><i data-lucide="file-spreadsheet"></i><span>Excel</span></button>
+                                <!-- อัปเดตสีปุ่ม -->
+                                <button id="filter-report-btn" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 flex-shrink-0" title="ค้นหา"><i data-lucide="search"></i></button>
+                                <button id="export-pdf-report-btn" class="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-red-700" title="Export PDF"><i data-lucide="file-type-2"></i><span>PDF</span></button>
+                                <button id="export-excel-report-btn" class="bg-emerald-700 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-emerald-800" title="Export Excel"><i data-lucide="file-spreadsheet"></i><span>Excel</span></button>
                             </div>
                         </div>
                         <div class="flex flex-col md:flex-row justify-end items-center gap-4 mb-6">
-                            <button id="btn-save-to-sheet" class="w-full sm:w-auto bg-teal-500 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-teal-600">
+                            <!-- อัปเดตสีปุ่ม -->
+                            <button id="btn-save-to-sheet" class="w-full sm:w-auto bg-cyan-600 text-white px-4 py-2 rounded-lg flex items-center justify-center space-x-2 hover:bg-cyan-700">
                                 <i data-lucide="database"></i>
                                 <span>ซิงค์ข้อมูล</span>
                             </button>
                         </div>
+                        <!-- อัปเดตสี Dashboard Cards -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
                             <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-blue-100 p-3 rounded-full"><i data-lucide="users" class="w-8 h-8 text-blue-500"></i></div><div><h4 class="font-semibold text-gray-500">จำนวนลูกค้า</h4><p id="report-total-customers" class="text-3xl font-bold text-gray-800"></p></div></div>
-                            <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-green-100 p-3 rounded-full"><i data-lucide="package" class="w-8 h-8 text-green-500"></i></div><div><h4 class="font-semibold text-gray-500">จำนวนสินค้า</h4><p id="report-total-products" class="text-3xl font-bold text-gray-800"></p></div></div>
-                            <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-yellow-100 p-3 rounded-full"><i data-lucide="shopping-cart" class="w-8 h-8 text-yellow-500"></i></div><div><h4 class="font-semibold text-gray-500">คำสั่งซื้อ</h4><p id="report-total-orders" class="text-3xl font-bold text-gray-800"></p></div></div>
-                            <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-indigo-100 p-3 rounded-full"><i data-lucide="dollar-sign" class="w-8 h-8 text-indigo-500"></i></div><div><h4 class="font-semibold text-gray-500">ยอดขาย</h4><p id="report-total-sales" class="text-3xl font-bold text-gray-800"></p></div></div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-emerald-100 p-3 rounded-full"><i data-lucide="package" class="w-8 h-8 text-emerald-500"></i></div><div><h4 class="font-semibold text-gray-500">จำนวนสินค้า</h4><p id="report-total-products" class="text-3xl font-bold text-gray-800"></p></div></div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-amber-100 p-3 rounded-full"><i data-lucide="shopping-cart" class="w-8 h-8 text-amber-500"></i></div><div><h4 class="font-semibold text-gray-500">คำสั่งซื้อ</h4><p id="report-total-orders" class="text-3xl font-bold text-gray-800"></p></div></div>
+                            <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-blue-100 p-3 rounded-full"><i data-lucide="dollar-sign" class="w-8 h-8 text-blue-500"></i></div><div><h4 class="font-semibold text-gray-500">ยอดขาย</h4><p id="report-total-sales" class="text-3xl font-bold text-gray-800"></p></div></div>
                             <div class="bg-white p-6 rounded-xl shadow-lg flex items-center space-x-4"><div class="bg-red-100 p-3 rounded-full"><i data-lucide="package-x" class="w-8 h-8 text-red-500"></i></div><div><h4 class="font-semibold text-gray-500">สินค้าใกล้หมด</h4><p id="report-low-stock-products" class="text-3xl font-bold text-gray-800"></p></div></div>
                         </div>
                         <h3 class="text-2xl font-bold mb-4">ลูกค้า Top 5 (ตามช่วงวันที่)</h3>
@@ -264,14 +285,16 @@
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-2xl font-bold">จัดการข้อมูลลูกค้า</h3>
                             <div class="flex space-x-2">
-                                <button id="print-customer-list-btn" class="bg-gray-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-gray-600"><i data-lucide="printer"></i><span>พิมพ์รายชื่อ</span></button>
-                                <button id="btn-show-add-customer" class="bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-600"><i data-lucide="plus"></i><span>เพิ่มลูกค้า</span></button>
+                                <!-- อัปเดตสีปุ่ม -->
+                                <button id="print-customer-list-btn" class="bg-slate-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-slate-600"><i data-lucide="printer"></i><span>พิมพ์รายชื่อ</span></button>
+                                <button id="btn-show-add-customer" class="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700"><i data-lucide="plus"></i><span>เพิ่มลูกค้า</span></button>
                             </div>
                         </div>
                         <div class="flex items-center gap-2 mb-4">
                             <input type="text" id="search-customer-id" placeholder="ค้นหารหัสสมาชิก..." class="p-2 border rounded-lg w-full">
-                            <button id="search-customer-btn" class="bg-indigo-500 text-white p-2 rounded-lg hover:bg-indigo-600"><i data-lucide="search"></i></button>
-                            <button id="reset-customer-search-btn" class="bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600"><i data-lucide="rotate-cw"></i></button>
+                            <!-- อัปเดตสีปุ่ม -->
+                            <button id="search-customer-btn" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"><i data-lucide="search"></i></button>
+                            <button id="reset-customer-search-btn" class="bg-slate-500 text-white p-2 rounded-lg hover:bg-slate-600"><i data-lucide="rotate-cw"></i></button>
                         </div>
                         <form id="add-customer-form" class="add-form bg-blue-50 p-4 rounded-lg mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="text" id="customer-id-input" placeholder="รหัสสมาชิก (เช่น C014)" class="p-2 border rounded-lg" required>
@@ -284,6 +307,7 @@
                                 <button type="button" class="close-form-btn bg-gray-300 text-gray-800 p-3 rounded-lg hover:bg-gray-400">ปิด</button>
                             </div>
                         </form>
+                        <!-- อัปเดตสีตาราง -->
                         <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-blue-100"><tr><th class="p-3 text-left">รหัส</th><th class="p-3 text-left">ชื่อ</th><th class="p-3 text-left">ที่อยู่</th><th class="p-3 text-right">ยอดซื้อสะสม</th><th class="p-3 text-left">การกระทำ</th></tr></thead><tbody id="admin-customers-table"></tbody></table></div>
                         <div id="customers-pagination" class="flex justify-center items-center space-x-1 sm:space-x-2 mt-4"></div>
                     </div>
@@ -292,20 +316,23 @@
                     <div id="mgmt-section-products" class="mgmt-section">
                         <div class="flex justify-between items-center mb-4">
                             <h3 class="text-2xl font-bold">จัดการข้อมูลสินค้า</h3>
-                            <button id="btn-show-add-product" class="bg-green-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-green-600"><i data-lucide="plus"></i><span>เพิ่มสินค้า</span></button>
+                            <!-- อัปเดตสีปุ่ม -->
+                            <button id="btn-show-add-product" class="bg-emerald-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-emerald-700"><i data-lucide="plus"></i><span>เพิ่มสินค้า</span></button>
                         </div>
-                        <form id="add-product-form" class="add-form bg-green-50 p-4 rounded-lg mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- อัปเดตสีฟอร์ม -->
+                        <form id="add-product-form" class="add-form bg-emerald-50 p-4 rounded-lg mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
                             <input type="text" id="product-name" placeholder="ชื่อสินค้า" class="p-2 border rounded-lg md:col-span-3" required>
                             <input type="number" id="product-price" placeholder="ราคา" min="0" class="p-2 border rounded-lg" required>
                             <input type="number" id="product-stock" placeholder="จำนวนสต๊อก" min="0" class="p-2 border rounded-lg" required>
                              <div class="md:col-span-3 flex items-center gap-2">
-                                <button type="submit" class="w-full bg-green-600 text-white p-3 rounded-lg flex items-center justify-center space-x-2">
+                                <button type="submit" class="w-full bg-emerald-600 text-white p-3 rounded-lg flex items-center justify-center space-x-2">
                                     <span>บันทึกข้อมูลสินค้า</span>
                                 </button>
                                 <button type="button" class="close-form-btn bg-gray-300 text-gray-800 p-3 rounded-lg hover:bg-gray-400">ปิด</button>
                             </div>
                         </form>
-                        <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-green-100"><tr><th class="p-3 text-left">รหัส</th><th class="p-3 text-left">ชื่อสินค้า</th><th class="p-3 text-left">ราคา</th><th class="p-3 text-left">สต๊อก</th><th class="p-3 text-left">การกระทำ</th></tr></thead><tbody id="admin-products-table"></tbody></table></div>
+                        <!-- อัปเดตสีตาราง -->
+                        <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-emerald-100"><tr><th class="p-3 text-left">รหัส</th><th class="p-3 text-left">ชื่อสินค้า</th><th class="p-3 text-left">ราคา</th><th class="p-3 text-left">สต๊อก</th><th class="p-3 text-left">การกระทำ</th></tr></thead><tbody id="admin-products-table"></tbody></table></div>
                     </div>
 
                     <!-- Order Management -->
@@ -315,12 +342,15 @@
                             <div class="flex flex-col sm:flex-row gap-2 w-full">
                                 <input type="text" id="search-order-id" placeholder="ค้นหารหัสสั่งซื้อ..." class="p-2 border rounded-lg w-full">
                                 <input type="text" id="search-receipt-id" placeholder="ค้นหารหัสใบเสร็จ..." class="p-2 border rounded-lg w-full">
-                                <button id="search-order-btn" class="bg-indigo-500 text-white p-2 rounded-lg hover:bg-indigo-600"><i data-lucide="search"></i></button>
+                                <!-- อัปเดตสีปุ่ม -->
+                                <button id="search-order-btn" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"><i data-lucide="search"></i></button>
                             </div>
-                            <button id="btn-show-add-order" class="bg-yellow-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-yellow-600 flex-shrink-0"><i data-lucide="plus"></i><span>เพิ่มคำสั่งซื้อ</span></button>
+                            <!-- อัปเดตสีปุ่ม -->
+                            <button id="btn-show-add-order" class="bg-amber-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-amber-600 flex-shrink-0"><i data-lucide="plus"></i><span>เพิ่มคำสั่งซื้อ</span></button>
                         </div>
 
-                        <form id="add-order-form" class="add-form bg-yellow-50 p-6 rounded-lg mb-6 space-y-4">
+                        <!-- อัปเดตสีฟอร์ม -->
+                        <form id="add-order-form" class="add-form bg-amber-50 p-6 rounded-lg mb-6 space-y-4">
                             <!-- Customer and Employee Info -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
@@ -336,7 +366,7 @@
                             </div>
                         
                             <!-- Add Item Section -->
-                            <div class="border-t border-b border-yellow-200 py-4 grid grid-cols-1 sm:grid-cols-5 gap-2 items-end">
+                            <div class="border-t border-b border-amber-200 py-4 grid grid-cols-1 sm:grid-cols-5 gap-2 items-end">
                                 <div class="sm:col-span-3">
                                     <label for="order-product-id" class="block text-sm font-medium text-gray-700">สินค้า</label>
                                     <select id="order-product-id" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
@@ -347,7 +377,8 @@
                                     <label for="order-quantity" class="block text-sm font-medium text-gray-700">จำนวน</label>
                                     <input type="number" id="order-quantity" value="1" min="1" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg">
                                 </div>
-                                <button type="button" id="add-item-to-order-btn" class="bg-indigo-500 text-white p-2 rounded-lg hover:bg-indigo-600 sm:col-span-1 w-full h-10 flex items-center justify-center space-x-2">
+                                <!-- อัปเดตสีปุ่ม -->
+                                <button type="button" id="add-item-to-order-btn" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 sm:col-span-1 w-full h-10 flex items-center justify-center space-x-2">
                                     <i data-lucide="plus"></i> <span>เพิ่ม</span>
                                 </button>
                             </div>
@@ -364,12 +395,14 @@
                             <div class="border-t pt-4 space-y-4">
                                 <div class="text-right text-xl font-bold text-gray-800">
                                     <span>ยอดรวม:</span>
-                                    <span id="new-order-total" class="text-indigo-600">0.00</span>
+                                    <!-- อัปเดตสี -->
+                                    <span id="new-order-total" class="text-blue-600">0.00</span>
                                     <span>บาท</span>
                                 </div>
                                  <textarea id="order-payment-details" placeholder="รายละเอียดชำระเงิน (ถ้ามี)" class="p-2 border rounded-lg w-full" rows="2"></textarea>
                                  <div class="flex items-center gap-2">
-                                    <button type="submit" class="w-full bg-yellow-600 text-white p-3 rounded-lg font-bold flex items-center justify-center space-x-2 text-lg">
+                                    <!-- อัปเดตสีปุ่ม -->
+                                    <button type="submit" class="w-full bg-amber-600 text-white p-3 rounded-lg font-bold flex items-center justify-center space-x-2 text-lg hover:bg-amber-700">
                                         <i data-lucide="save"></i> <span>บันทึกคำสั่งซื้อ</span>
                                     </button>
                                      <button type="button" class="close-form-btn bg-gray-300 text-gray-800 p-3 rounded-lg hover:bg-gray-400">ปิด</button>
@@ -377,7 +410,8 @@
                             </div>
                         </form>
 
-                        <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-yellow-100"><tr><th class="p-3 text-left">รหัสสั่งซื้อ</th><th class="p-3 text-left">ลูกค้า</th><th class="p-3 text-left">ยอดรวม</th><th class="p-3 text-left">สถานะ</th><th class="p-3 text-left">วันที่</th><th class="p-3 text-left">ผู้ดำเนินการ</th><th class="p-3 text-left">การกระทำ</th></tr></thead><tbody id="admin-orders-table"></tbody></table></div>
+                        <!-- อัปเดตสีตาราง -->
+                        <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-amber-100"><tr><th class="p-3 text-left">รหัสสั่งซื้อ</th><th class="p-3 text-left">ลูกค้า</th><th class="p-3 text-left">ยอดรวม</th><th class="p-3 text-left">สถานะ</th><th class="p-3 text-left">วันที่</th><th class="p-3 text-left">ผู้ดำเนินการ</th><th class="p-3 text-left">การกระทำ</th></tr></thead><tbody id="admin-orders-table"></tbody></table></div>
                     </div>
 
                     <!-- Settings Management -->
@@ -390,9 +424,10 @@
                                     <div><label for="store-name-input" class="block text-sm font-medium text-gray-700">ชื่อร้านค้า</label><input type="text" id="store-name-input" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></div>
                                     <div><label for="store-address-input" class="block text-sm font-medium text-gray-700">ที่อยู่ร้านค้า (รองรับหลายบรรทัด)</label><textarea id="store-address-input" rows="4" class="mt-1 block w-full p-2 border border-gray-300 rounded-lg"></textarea></div>
                                 </div>
-                                <button id="save-settings-btn" class="mt-4 bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 flex items-center space-x-2"><i data-lucide="save"></i><span>บันทึกการตั้งค่าร้านค้า</span></button>
+                                <!-- อัปเดตสีปุ่ม -->
+                                <button id="save-settings-btn" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 flex items-center space-x-2"><i data-lucide="save"></i><span>บันทึกการตั้งค่าร้านค้า</span></button>
                             </div>
-                             <!-- NEW: Backup Section -->
+                             <!-- NEW: Backup Section (คงธีมสีแดงไว้เพื่อเตือน) -->
                             <div class="p-6 bg-red-50 rounded-lg border border-red-200">
                                 <div class="flex items-center space-x-3">
                                     <i data-lucide="folder-archive" class="w-8 h-8 text-red-600"></i>
@@ -419,7 +454,8 @@
 
     <!-- Modals -->
     <div id="document-modal-backdrop" class="modal-backdrop"></div>
-    <div id="document-modal" class="modal bg-gray-100 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-w-4xl max-h-[90vh] overflow-y-auto"></div>
+    <!-- อัปเดตสีพื้นหลัง Modal -->
+    <div id="document-modal" class="modal bg-gray-50 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 max-w-4xl max-h-[90vh] overflow-y-auto"></div>
 
     <div id="status-history-modal-backdrop" class="modal-backdrop"></div>
     <div id="status-history-modal" class="modal bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-1/3 max-w-lg">
@@ -463,7 +499,8 @@
         </div>
         <div class="flex justify-end space-x-4 mt-6">
             <button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ยกเลิก</button>
-            <button id="save-status-btn" class="bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700">บันทึก</button>
+            <!-- อัปเดตสีปุ่ม -->
+            <button id="save-status-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700">บันทึก</button>
         </div>
     </div>
     
@@ -478,15 +515,17 @@
         </div>
         <div class="flex justify-end space-x-4 mt-6">
             <button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ยกเลิก</button>
-            <button id="save-stock-btn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700">บันทึก</button>
+            <!-- อัปเดตสีปุ่ม -->
+            <button id="save-stock-btn" class="bg-emerald-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-emerald-700">บันทึก</button>
         </div>
     </div>
 
+    <!-- อัปเดตดีไซน์ Admin Password Modal -->
     <div id="admin-password-modal-backdrop" class="modal-backdrop"></div>
     <div id="admin-password-modal" class="modal bg-white p-8 rounded-2xl shadow-lg max-w-sm w-11/12">
         <div class="text-center mb-6">
-            <div class="mx-auto bg-red-100 rounded-full w-16 h-16 flex items-center justify-center">
-                <i data-lucide="shield" class="text-red-500 w-8 h-8"></i>
+            <div class="mx-auto bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center">
+                <i data-lucide="shield-check" class="text-blue-500 w-8 h-8"></i>
             </div>
             <h2 class="text-2xl font-bold mt-4">สำหรับผู้ดูแลระบบ</h2>
             <p class="text-gray-500">กรุณากรอกรหัสผ่านเพื่อเข้าสู่ระบบ</p>
@@ -495,10 +534,10 @@
             <div class="space-y-4">
                 <div>
                     <label for="admin-password" class="block text-sm font-medium text-gray-700">รหัสผ่าน</label>
-                    <input type="password" id="admin-password" class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-red-500 focus:border-red-500">
+                    <input type="password" id="admin-password" class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
                     <p id="password-error" class="text-red-500 text-sm mt-1 hidden">รหัสผ่านไม่ถูกต้อง</p>
                 </div>
-                <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg flex items-center justify-center space-x-2">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg flex items-center justify-center space-x-2">
                     <i data-lucide="log-in"></i>
                     <span>เข้าสู่ระบบ</span>
                 </button>
@@ -530,7 +569,10 @@
 
         let newOrderItems = [];
         
-        const ALL_STATUSES = ["รับคำสั่งซื้อ", "ชำระเงินแล้ว", "จัดส่งแล้ว", "ลูกค้าได้รับแล้ว"];
+        // --- [START] อัปเดต ALL_STATUSES ---
+        const ALL_STATUSES = ["รับคำสั่งซื้อ", "ชำระเงินแล้ว", "จัดส่งแล้ว", "ลูกค้าได้รับแล้ว", "ยืนยันการรับแล้ว"];
+        // --- [END] อัปเดต ALL_STATUSES ---
+
         const ADMIN_PASSWORD = 'admin1234'; 
         let isAdminAuthenticated = false;
 
@@ -639,6 +681,7 @@
                 "ชำระเงินแล้ว": "credit-card",
                 "จัดส่งแล้ว": "truck",
                 "ลูกค้าได้รับแล้ว": "package-check",
+                "ยืนยันการรับแล้ว": "check-check", // เพิ่มไอคอนสำหรับสถานะใหม่
             };
 
             const productInfoHTML = (order.items || []).map(item => {
@@ -652,10 +695,11 @@
                     <div class="flex">
                         ${ALL_STATUSES.map((status, index) => {
                             const isCompleted = index <= currentStatusIndex;
-                            const circleClass = isCompleted ? 'bg-indigo-600 border-indigo-600' : 'bg-white border-gray-300';
+                            /* อัปเดตสี Timeline (Blue) */
+                            const circleClass = isCompleted ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300';
                             const iconClass = isCompleted ? 'text-white' : 'text-gray-400';
-                            const lineClass = (index < currentStatusIndex) ? 'bg-indigo-600' : 'bg-gray-300';
-                            const textClass = isCompleted ? 'text-gray-800' : 'text-gray-400';
+                            const lineClass = (index < currentStatusIndex) ? 'bg-blue-600' : 'bg-gray-300';
+                            const textClass = isCompleted ? 'text-gray-800' : 'text-slate-400';
 
                             return `
                                 <div class="flex-1 flex items-center">
@@ -676,20 +720,47 @@
 
             let actionButtons = `
                 <button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบสั่งซื้อ</span></button>
-                <button class="customer-download-btn w-full text-center text-sm bg-indigo-500 text-white px-3 py-1.5 rounded-md hover:bg-indigo-600 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="download" class="w-4 h-4"></i> <span>โหลดใบสั่งซื้อ</span></button>
+                <!-- อัปเดตสีปุ่ม Download -->
+                <button class="customer-download-btn w-full text-center text-sm bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="download" class="w-4 h-4"></i> <span>โหลดใบสั่งซื้อ</span></button>
             `;
             if (order.receiptId) {
                 actionButtons += `
                     <button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบเสร็จ</span></button>
-                    <button class="customer-download-btn w-full text-center text-sm bg-teal-500 text-white px-3 py-1.5 rounded-md hover:bg-teal-600 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="receipt" class="w-4 h-4"></i> <span>โหลดใบเสร็จ</span></button>
+                    <!-- อัปเดตสีปุ่ม Download (Emerald) -->
+                    <button class="customer-download-btn w-full text-center text-sm bg-emerald-600 text-white px-3 py-1.5 rounded-md hover:bg-emerald-700 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="receipt" class="w-4 h-4"></i> <span>โหลดใบเสร็จ</span></button>
                 `;
             }
+
+            // --- [START] การเปลี่ยนแปลงสำหรับปุ่มยืนยันการรับสินค้า ---
+            if (order.status === "ลูกค้าได้รับแล้ว") {
+                // ถ้าได้รับของแล้ว ให้แสดงปุ่มยืนยัน
+                // เราจะสร้าง actionButtons ใหม่ทั้งหมดสำหรับสถานะนี้
+                actionButtons = `
+                    ${order.receiptId ? `<button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบเสร็จ</span></button>` : '<div class="hidden"></div>'}
+                    <button class="customer-confirm-receipt-btn w-full text-center text-sm bg-emerald-600 text-white px-3 py-2 rounded-md hover:bg-emerald-700 flex items-center justify-center space-x-2 ${order.receiptId ? '' : 'col-span-2'}" data-order-id="${order.id}">
+                        <i data-lucide="check-check" class="w-5 h-5"></i> 
+                        <span>กดยืนยันการรับสินค้า</span>
+                    </button>
+                `;
+            } else if (order.status === "ยืนยันการรับแล้ว") {
+                // ถ้ายืนยันแล้ว ให้แสดงข้อความ
+                 actionButtons = `
+                    ${order.receiptId ? `<button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบเสร็จ</span></button>` : '<div class="hidden"></div>'}
+                    <div class="text-center text-sm bg-emerald-50 text-emerald-700 p-2 rounded-lg font-semibold flex items-center justify-center space-x-2 ${order.receiptId ? '' : 'col-span-2'}">
+                        <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        <span>รายการสำเร็จแล้ว</span>
+                    </div>
+                `;
+            }
+            // --- [END] การเปลี่ยนแปลงสำหรับปุ่มยืนยันการรับสินค้า ---
+
 
             return `
             <div class="border rounded-xl p-4 sm:p-6 bg-white transition-shadow duration-300 hover:shadow-lg">
                 <div class="flex justify-between items-start border-b pb-4">
                     <div>
-                        <p class="font-bold text-gray-800">รหัสสั่งซื้อ: <span class="text-indigo-600">${order.id}</span></p>
+                        <!-- อัปเดตสี Order ID -->
+                        <p class="font-bold text-gray-800">รหัสสั่งซื้อ: <span class="text-blue-600">${order.id}</span></p>
                         <p class="text-sm text-gray-500">วันที่: ${formatDate(order.date)}</p>
                     </div>
                     <div class="text-right flex-shrink-0 ml-2">
@@ -756,6 +827,53 @@
             document.getElementById('member-id').value = '';
         });
 
+        // --- [START] เพิ่ม Event Listener สำหรับปุ่มกดยืนยันการรับสินค้า ---
+        document.getElementById('customer-details').addEventListener('click', async (e) => {
+            const confirmBtn = e.target.closest('.customer-confirm-receipt-btn');
+            if (confirmBtn) {
+                const orderId = confirmBtn.dataset.orderId;
+                if (!orderId) return;
+
+                confirmBtn.disabled = true; // ป้องกันการกดซ้ำ
+                confirmBtn.innerHTML = '<i data-lucide="loader" class="animate-spin w-5 h-5"></i> กำลังบันทึก...';
+                lucide.createIcons();
+
+                // อัปเดตสถานะเป็น "ยืนยันการรับแล้ว"
+                const success = await updateOrderStatus(orderId, "ยืนยันการรับแล้ว");
+                
+                if (success) {
+                    // บันทึกข้อมูลลง Google Sheet
+                    await saveDataToGoogleSheet(false); 
+
+                    // แสดงข้อความ "รายการสำเร็จแล้ว"
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'รายการสำเร็จแล้ว',
+                        text: 'ขอบคุณที่ยืนยันการรับสินค้า!',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+
+                    // โหลดข้อมูลประวัติลูกค้าใหม่เพื่ออัปเดตหน้าจอ
+                    const memberId = document.getElementById('member-id').value.toUpperCase();
+                    if (memberId) {
+                        renderCustomerHistory(memberId);
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ผิดพลาด',
+                        text: 'ไม่สามารถอัปเดตสถานะได้ กรุณาลองใหม่อีกครั้ง'
+                    });
+                    // คืนค่าปุ่ม
+                    confirmBtn.disabled = false;
+                     confirmBtn.innerHTML = '<i data-lucide="check-check" class="w-5 h-5"></i> <span>กดยืนยันการรับสินค้า</span>';
+                     lucide.createIcons();
+                }
+            }
+        });
+        // --- [END] เพิ่ม Event Listener ---
+
         // --- Admin View Logic ---
         const adminMainBtns = document.querySelectorAll('.admin-main-btn');
         const mgmtSections = document.querySelectorAll('.mgmt-section');
@@ -792,21 +910,22 @@
             let paginationHTML = '';
             
             paginationHTML += `
-                <button class="pagination-btn p-2 rounded-md ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-300 hover:bg-indigo-500 hover:text-white'}" data-type="${type}" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>
+                <!-- อัปเดตสี Pagination -->
+                <button class="pagination-btn p-2 rounded-md ${currentPage === 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-300 hover:bg-blue-500 hover:text-white'}" data-type="${type}" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>
                     <i data-lucide="chevron-left" class="w-5 h-5 pointer-events-none"></i>
                 </button>
             `;
 
             for (let i = 1; i <= totalPages; i++) {
                 paginationHTML += `
-                    <button class="pagination-btn px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base ${i === currentPage ? 'bg-indigo-600 text-white' : 'bg-gray-200 hover:bg-indigo-500 hover:text-white'}" data-type="${type}" data-page="${i}">
+                    <button class="pagination-btn px-3 sm:px-4 py-2 rounded-md text-sm sm:text-base ${i === currentPage ? 'bg-blue-600 text-white' : 'bg-gray-200 hover:bg-blue-500 hover:text-white'}" data-type="${type}" data-page="${i}">
                         ${i}
                     </button>
                 `;
             }
 
             paginationHTML += `
-                <button class="pagination-btn p-2 rounded-md ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-300 hover:bg-indigo-500 hover:text-white'}" data-type="${type}" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>
+                <button class="pagination-btn p-2 rounded-md ${currentPage === totalPages ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-300 hover:bg-blue-500 hover:text-white'}" data-type="${type}" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>
                     <i data-lucide="chevron-right" class="w-5 h-5 pointer-events-none"></i>
                 </button>
             `;
@@ -833,7 +952,8 @@
                     <td class="p-3 font-mono">${c.id}</td>
                     <td class="p-3">${c.name}</td>
                     <td class="p-3 text-sm">${c.address}</td>
-                    <td class="p-3 text-right font-semibold text-indigo-600">${totalSpending.toLocaleString('th-TH')} ฿</td>
+                    <!-- อัปเดตสี -->
+                    <td class="p-3 text-right font-semibold text-blue-600">${totalSpending.toLocaleString('th-TH')} ฿</td>
                     <td class="p-3">
                         <div class="flex items-center space-x-2">
                              <button class="view-customer-history-btn text-blue-500 hover:text-blue-700 p-1" data-customer-id="${c.id}" title="ดูประวัติ">
@@ -859,7 +979,8 @@
                 const lowStockBadge = isLowStock ? '<span class="ml-2 text-xs bg-red-100 text-red-800 font-semibold px-2 py-0.5 rounded-full">ใกล้หมด</span>' : '';
                 
                 return `
-                <tr class="hover:bg-green-50">
+                <!-- อัปเดตสี hover -->
+                <tr class="hover:bg-emerald-50">
                     <td class="p-3 font-mono">${p.id}</td>
                     <td class="p-3">${p.name}</td>
                     <td class="p-3">${p.price.toLocaleString()} บาท</td>
@@ -884,17 +1005,28 @@
                 const actionButtons = `
                     <div class="flex items-center space-x-1">
                         <button class="view-status-history-btn text-gray-500 hover:text-gray-700 p-1" data-order-id="${o.id}" title="ดูประวัติสถานะ"><i data-lucide="list-ordered" class="w-5 h-5"></i></button>
-                        <button class="edit-status-btn text-indigo-500 hover:text-indigo-700 p-1" data-order-id="${o.id}" title="แก้ไขสถานะ"><i data-lucide="file-cog" class="w-5 h-5"></i></button>
+                        <!-- อัปเดตสีไอคอน -->
+                        <button class="edit-status-btn text-blue-500 hover:text-blue-700 p-1" data-order-id="${o.id}" title="แก้ไขสถานะ"><i data-lucide="file-cog" class="w-5 h-5"></i></button>
                         <button class="view-doc-btn text-blue-500 hover:text-blue-700 p-1" data-doc-type="${o.receiptId ? 'receipt' : 'invoice'}" data-order-id="${o.id}" title="ดูเอกสาร"><i data-lucide="eye" class="w-5 h-5"></i></button>
                         <button class="delete-btn text-red-500 hover:text-red-700 p-1" data-type="orders" data-id="${o.id}" title="ลบ"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                     </div>
                 `;
+                
+                // --- [START] เพิ่มสไตล์สำหรับสถานะ "ยืนยันการรับแล้ว" ---
+                let statusClass = "font-semibold";
+                if (o.status === "ยืนยันการรับแล้ว") {
+                    statusClass += " text-emerald-600";
+                }
+                // --- [END] เพิ่มสไตล์ ---
 
-                return `<tr class="hover:bg-yellow-50">
+
+                return `
+                <!-- อัปเดตสี hover -->
+                <tr class="hover:bg-amber-50">
                     <td class="p-3 font-mono">${o.id}<br><span class="text-xs text-gray-500">${o.receiptId || ''}</span></td>
                     <td class="p-3">${customer?.name || 'N/A'}</td>
                     <td class="p-3">${calculateOrderTotal(o).toLocaleString()} บาท</td>
-                    <td class="p-3 font-semibold">${o.status}</td>
+                    <td class="p-3 ${statusClass}">${o.status}</td>
                     <td class="p-3">${formatDate(o.date)}</td>
                     <td class="p-3">${o.handlerEmployee || '-'}</td>
                     <td class="p-3">${actionButtons}</td>
@@ -967,7 +1099,8 @@
                     <div>
                         <p class="font-bold text-gray-800">${c.name}</p>
                     </div>
-                    <p class="text-indigo-600 font-bold text-xl mt-2">${c.totalSpent.toLocaleString()} บาท</p>
+                    <!-- อัปเดตสี -->
+                    <p class="text-blue-600 font-bold text-xl mt-2">${c.totalSpent.toLocaleString()} บาท</p>
                 </div>
             `).join('') || '<p class="text-center text-gray-500 col-span-full">ไม่พบข้อมูลลูกค้าในช่วงเวลานี้</p>';
             
@@ -999,7 +1132,8 @@
                         </div>
                     </td>
                     <td class="p-3 text-center text-lg font-semibold">${sale.quantity}</td>
-                    <td class="p-3 text-right text-lg font-bold text-green-700">${sale.total.toLocaleString()} บาท</td>
+                    <!-- อัปเดตสี -->
+                    <td class="p-3 text-right text-lg font-bold text-emerald-700">${sale.total.toLocaleString()} บาท</td>
                 </tr>
             `).join('') || '<tr><td colspan="3" class="text-center p-4 text-gray-500">ไม่พบข้อมูลการขายสินค้าในช่วงเวลานี้</td></tr>';
 
@@ -1289,13 +1423,15 @@
         // --- View Switching ---
         customerViewBtn.addEventListener('click', () => {
             customerSection.classList.remove('hidden'); adminSection.classList.add('hidden');
-            customerViewBtn.classList.add('bg-indigo-500', 'text-white', 'shadow');
-            adminViewBtn.classList.remove('bg-indigo-500', 'text-white', 'shadow');
+            customerViewBtn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+            adminViewBtn.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
+            adminViewBtn.classList.add('text-blue-600', 'hover:bg-blue-50');
         });
         adminViewBtn.addEventListener('click', () => {
             adminSection.classList.remove('hidden'); customerSection.classList.add('hidden');
-            adminViewBtn.classList.add('bg-indigo-500', 'text-white', 'shadow');
-            customerViewBtn.classList.remove('bg-indigo-500', 'text-white', 'shadow');
+            adminViewBtn.classList.add('bg-blue-600', 'text-white', 'shadow-md');
+            adminViewBtn.classList.remove('text-blue-600', 'hover:bg-blue-50');
+            customerViewBtn.classList.remove('bg-blue-600', 'text-white', 'shadow-md');
             
             if (!isAdminAuthenticated) {
                 openModal('admin-password');
@@ -1390,13 +1526,17 @@
 
             return `<div class="p-2 sm:p-4 printable-content">
                 <div id="invoice-content" class="bg-white p-6 sm:p-8 shadow-lg max-w-4xl mx-auto border">
-                    <div class="flex justify-between items-start mb-6"><div><img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" class="h-16 w-auto mb-4"><h2 class="text-2xl font-bold text-slate-800">ใบสั่งซื้อ (Sales Order)</h2><p class="text-slate-500">รหัสสั่งซื้อ: ${order.id}</p></div><div class="text-right"><h3 class="text-xl font-bold text-teal-700">${storeSettings.name}</h3><div class="text-sm">${storeSettings.address.replace(/\n/g, '<br>')}</div></div></div>
+                    <!-- อัปเดตสี -->
+                    <div class="flex justify-between items-start mb-6"><div><img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" class="h-16 w-auto mb-4"><h2 class="text-2xl font-bold text-slate-800">ใบสั่งซื้อ (Sales Order)</h2><p class="text-slate-500">รหัสสั่งซื้อ: ${order.id}</p></div><div class="text-right"><h3 class="text-xl font-bold text-blue-700">${storeSettings.name}</h3><div class="text-sm">${storeSettings.address.replace(/\n/g, '<br>')}</div></div></div>
                     <div class="grid grid-cols-2 gap-6 border-y border-gray-200 py-4 mb-6 text-sm"><div><h4 class="font-bold mb-1 text-gray-600">ข้อมูลลูกค้า:</h4><p class="font-semibold text-gray-800">${customer.name}</p><p class="text-gray-700">${customer.address}</p></div><div class="text-right"><h4 class="font-bold mb-1 text-gray-600">วันที่สั่งซื้อ:</h4><p class="text-gray-700">${formatDate(order.date)}</p><h4 class="font-bold mb-1 mt-2 text-gray-600">สถานะ:</h4><p class="font-semibold text-gray-800">${order.status}</p></div></div>
-                    <table class="w-full mb-6 text-sm"><thead><tr class="border-b bg-gray-50"><th class="text-left py-2 px-1 font-semibold">สินค้า</th><th class="text-center py-2 px-1 font-semibold">จำนวน</th><th class="text-right py-2 px-1 font-semibold">ราคา/หน่วย</th><th class="text-right py-2 px-1 font-semibold">ราคารวม</th></tr></thead><tbody>${itemsHTML}</tbody><tfoot><tr class="border-t-2 font-bold"><td colspan="3" class="text-right py-2 px-1">ยอดรวมสุทธิ:</td><td class="text-right py-2 px-1 text-lg text-indigo-600">${calculateOrderTotal(order).toLocaleString()} บาท</td></tr></tfoot></table>
+                    <table class="w-full mb-6 text-sm"><thead><tr class="border-b bg-gray-50"><th class="text-left py-2 px-1 font-semibold">สินค้า</th><th class="text-center py-2 px-1 font-semibold">จำนวน</th><th class="text-right py-2 px-1 font-semibold">ราคา/หน่วย</th><th class="text-right py-2 px-1 font-semibold">ราคารวม</th></tr></thead><tbody>${itemsHTML}</tbody><tfoot><tr class="border-t-2 font-bold"><td colspan="3" class="text-right py-2 px-1">ยอดรวมสุทธิ:</td>
+                    <!-- อัปเดตสี -->
+                    <td class="text-right py-2 px-1 text-lg text-blue-600">${calculateOrderTotal(order).toLocaleString()} บาท</td></tr></tfoot></table>
                     <div class="mt-8 pt-4 border-t text-xs text-gray-500"><p>ขอบคุณที่ใช้บริการ</p></div>
                 </div>
             </div>
-            <div class="flex justify-end space-x-4 mt-4 p-4 print-hide"><button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ปิด</button><button class="print-doc-btn bg-gray-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-600 flex items-center space-x-2"><i data-lucide="printer"></i><span>ปริ้น</span></button><button class="download-doc-btn bg-indigo-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-indigo-700 flex items-center space-x-2"><i data-lucide="download"></i><span>ดาวน์โหลด</span></button></div>`;
+            <!-- อัปเดตสีปุ่ม -->
+            <div class="flex justify-end space-x-4 mt-4 p-4 print-hide"><button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ปิด</button><button class="print-doc-btn bg-gray-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-600 flex items-center space-x-2"><i data-lucide="printer"></i><span>ปริ้น</span></button><button class="download-doc-btn bg-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-blue-700 flex items-center space-x-2"><i data-lucide="download"></i><span>ดาวน์โหลด</span></button></div>`;
         }
         
         function generateReceiptHTML(order) {
@@ -1409,14 +1549,18 @@
                 <div id="receipt-content" class="relative bg-white p-6 sm:p-8 shadow-lg max-w-4xl mx-auto border">
                     <div class="watermark">PAID</div>
                     <div class="content-wrapper">
-                        <div class="flex justify-between items-start mb-6"><div><img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" class="h-16 w-auto mb-4"><h2 class="text-2xl font-bold text-teal-800">ใบเสร็จรับเงิน (Receipt)</h2><p class="text-slate-500">เลขที่: ${order.receiptId}</p></div><div class="text-right"><h3 class="text-xl font-bold text-teal-700">${storeSettings.name}</h3><div class="text-sm">${storeSettings.address.replace(/\n/g, '<br>')}</div></div></div>
+                        <!-- อัปเดตสี -->
+                        <div class="flex justify-between items-start mb-6"><div><img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" class="h-16 w-auto mb-4"><h2 class="text-2xl font-bold text-emerald-800">ใบเสร็จรับเงิน (Receipt)</h2><p class="text-slate-500">เลขที่: ${order.receiptId}</p></div><div class="text-right"><h3 class="text-xl font-bold text-blue-700">${storeSettings.name}</h3><div class="text-sm">${storeSettings.address.replace(/\n/g, '<br>')}</div></div></div>
                         <div class="grid grid-cols-2 gap-6 border-y border-gray-200 py-4 mb-6 text-sm"><div><h4 class="font-bold mb-1 text-gray-600">ข้อมูลลูกค้า:</h4><p class="font-semibold text-gray-800">${customer.name}</p><p class="text-gray-700">${customer.address}</p></div><div class="text-right"><h4 class="font-bold mb-1 text-gray-600">วันที่ออกใบเสร็จ:</h4><p class="text-gray-700">${formatDate(order.receiptDate)}</p><h4 class="font-bold mb-1 mt-2 text-gray-600">อ้างอิงคำสั่งซื้อ:</h4><p class="text-gray-700">${order.id}</p></div></div>
-                        <table class="w-full mb-6 text-sm"><thead><tr class="border-b bg-gray-50"><th class="text-left py-2 px-1 font-semibold">สินค้า</th><th class="text-center py-2 px-1 font-semibold">จำนวน</th><th class="text-right py-2 px-1 font-semibold">ราคา/หน่วย</th><th class="text-right py-2 px-1 font-semibold">ราคารวม</th></tr></thead><tbody>${itemsHTML}</tbody><tfoot><tr class="border-t-2 font-bold"><td colspan="3" class="text-right py-2 px-1">ยอดรวมสุทธิ:</td><td class="text-right py-2 px-1 text-lg text-teal-600">${calculateOrderTotal(order).toLocaleString()} บาท</td></tr></tfoot></table>
+                        <table class="w-full mb-6 text-sm"><thead><tr class="border-b bg-gray-50"><th class="text-left py-2 px-1 font-semibold">สินค้า</th><th class="text-center py-2 px-1 font-semibold">จำนวน</th><th class="text-right py-2 px-1 font-semibold">ราคา/หน่วย</th><th class="text-right py-2 px-1 font-semibold">ราคารวม</th></tr></thead><tbody>${itemsHTML}</tbody><tfoot><tr class="border-t-2 font-bold"><td colspan="3" class="text-right py-2 px-1">ยอดรวมสุทธิ:</td>
+                        <!-- อัปเดตสี -->
+                        <td class="text-right py-2 px-1 text-lg text-emerald-600">${calculateOrderTotal(order).toLocaleString()} บาท</td></tr></tfoot></table>
                         <div class="mt-8 pt-4 border-t text-xs text-gray-500"><p>ชำระเงินเรียบร้อยแล้ว ขอบคุณที่ใช้บริการ</p></div>
                     </div>
                 </div>
             </div>
-            <div class="flex justify-end space-x-4 mt-4 p-4 print-hide"><button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ปิด</button><button class="print-doc-btn bg-gray-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-600 flex items-center space-x-2"><i data-lucide="printer"></i><span>ปริ้น</span></button><button class="download-doc-btn bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 flex items-center space-x-2"><i data-lucide="download"></i><span>ดาวน์โหลด</span></button></div>`;
+            <!-- อัปเดตสีปุ่ม -->
+            <div class="flex justify-end space-x-4 mt-4 p-4 print-hide"><button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ปิด</button><button class="print-doc-btn bg-gray-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-600 flex items-center space-x-2"><i data-lucide="printer"></i><span>ปริ้น</span></button><button class="download-doc-btn bg-emerald-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-emerald-700 flex items-center space-x-2"><i data-lucide="download"></i><span>ดาวน์โหลด</span></button></div>`;
         }
 
         function generateSalesReportHTML(orders, productSales, startDate, endDate) {
@@ -1437,14 +1581,16 @@
             return `<div class="p-2 sm:p-4 printable-content">
                 <div id="sales-report-content" class="bg-white p-6 sm:p-8 shadow-lg max-w-4xl mx-auto border">
                     <div class="text-center mb-8"><img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" class="h-16 w-auto mx-auto mb-2"><h2 class="text-2xl font-bold text-slate-800">รายงานสรุปยอดขาย</h2><p class="text-slate-500">${storeSettings.name}</p><p class="text-slate-500">สำหรับวันที่ ${formatDate(startDate)} ถึง ${formatDate(endDate)}</p></div>
-                    <div class="grid grid-cols-2 gap-4 mb-6"><div class="bg-gray-100 p-4 rounded-lg text-center"><h4 class="font-bold text-gray-700">จำนวนคำสั่งซื้อ</h4><p class="text-2xl font-bold text-gray-900">${orders.length}</p></div><div class="bg-green-100 p-4 rounded-lg text-center"><h4 class="font-bold text-green-800">ยอดขายรวม</h4><p class="text-2xl font-bold text-green-900">${totalSales.toLocaleString()} บาท</p></div></div>
+                    <!-- อัปเดตสี -->
+                    <div class="grid grid-cols-2 gap-4 mb-6"><div class="bg-gray-100 p-4 rounded-lg text-center"><h4 class="font-bold text-gray-700">จำนวนคำสั่งซื้อ</h4><p class="text-2xl font-bold text-gray-900">${orders.length}</p></div><div class="bg-emerald-100 p-4 rounded-lg text-center"><h4 class="font-bold text-emerald-800">ยอดขายรวม</h4><p class="text-2xl font-bold text-emerald-900">${totalSales.toLocaleString()} บาท</p></div></div>
                     <h4 class="font-bold text-lg mb-2 mt-6">สรุปยอดขายตามสินค้า</h4>
                     <table class="w-full text-sm mb-8"><thead><tr class="bg-gray-100"><th class="p-2 text-left font-semibold">รหัสสินค้า</th><th class="p-2 text-left font-semibold">ชื่อสินค้า</th><th class="p-2 text-center font-semibold">จำนวนรวม</th><th class="p-2 text-right font-semibold">ยอดขายรวม</th></tr></thead><tbody>${productItemsHTML}</tbody></table>
                     <h4 class="font-bold text-lg mb-2">รายการคำสั่งซื้อทั้งหมด</h4>
                     <table class="w-full text-sm"><thead><tr class="bg-gray-100"><th class="p-2 text-left font-semibold">วันที่</th><th class="p-2 text-left font-semibold">รหัสสั่งซื้อ</th><th class="p-2 text-left font-semibold">ลูกค้า</th><th class="p-2 text-left font-semibold">ผู้ดำเนินการ</th><th class="p-2 text-right font-semibold">ยอดรวม</th></tr></thead><tbody>${orderItemsHTML}</tbody></table>
                 </div>
             </div>
-            <div class="flex justify-end space-x-4 mt-4 p-4 print-hide"><button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ปิด</button><button class="print-doc-btn bg-gray-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-600 flex items-center space-x-2"><i data-lucide="printer"></i><span>ปริ้น</span></button><button class="download-doc-btn bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 flex items-center space-x-2"><i data-lucide="download"></i><span>ดาวน์โหลด</span></button></div>`;
+            <!-- อัปเดตสีปุ่ม -->
+            <div class="flex justify-end space-x-4 mt-4 p-4 print-hide"><button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ปิด</button><button class="print-doc-btn bg-gray-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-600 flex items-center space-x-2"><i data-lucide="printer"></i><span>ปริ้น</span></button><button class="download-doc-btn bg-emerald-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-emerald-700 flex items-center space-x-2"><i data-lucide="download"></i><span>ดาวน์โหลด</span></button></div>`;
         }
 
         document.addEventListener('click', (e) => {
@@ -1714,25 +1860,28 @@
                             <p class="text-sm text-gray-500">รหัสสมาชิก: ${customer.id}</p>
                         </div>
                         <div class="flex items-center space-x-2">
-                            <button id="print-history-btn" class="bg-blue-500 text-white px-3 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-600">
+                            <!-- อัปเดตสีปุ่ม -->
+                            <button id="print-history-btn" class="bg-blue-600 text-white px-3 py-2 rounded-lg flex items-center space-x-2 hover:bg-blue-700">
                                 <i data-lucide="printer"></i><span>พิมพ์ประวัติ</span>
                             </button>
                             <button class="close-modal-btn text-gray-400 hover:text-gray-600 p-2" onclick="closeModal('customer-history')">&times;</button>
                         </div>
                     </div>
                     <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div id="history-summary-box" class="bg-indigo-50 p-4 rounded-lg text-center">
+                        <!-- อัปเดตสี -->
+                        <div id="history-summary-box" class="bg-blue-50 p-4 rounded-lg text-center">
                             <!-- Summary Title -->
                             <h4 id="history-summary-title" class="font-semibold text-gray-600"></h4>
                             <!-- Summary Value -->
-                            <p id="history-total-spending" class="text-2xl font-bold text-indigo-700"></p>
+                            <p id="history-total-spending" class="text-2xl font-bold text-blue-700"></p>
                         </div>
                         <div class="bg-gray-100 p-4 rounded-lg md:col-span-2 flex items-center gap-2">
                             <input type="date" id="history-start-date" class="p-2 border rounded-lg text-sm w-full">
                             <span class="text-gray-500">ถึง</span>
                             <input type="date" id="history-end-date" class="p-2 border rounded-lg text-sm w-full">
-                            <button id="filter-history-btn" class="bg-indigo-500 text-white p-2 rounded-lg hover:bg-indigo-600 flex-shrink-0" title="ค้นหา"><i data-lucide="search"></i></button>
-                            <button id="reset-history-btn" class="bg-gray-500 text-white p-2 rounded-lg hover:bg-gray-600 flex-shrink-0" title="ล้าง"><i data-lucide="rotate-cw"></i></button>
+                            <!-- อัปเดตสีปุ่ม -->
+                            <button id="filter-history-btn" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 flex-shrink-0" title="ค้นหา"><i data-lucide="search"></i></button>
+                            <button id="reset-history-btn" class="bg-slate-500 text-white p-2 rounded-lg hover:bg-slate-600 flex-shrink-0" title="ล้าง"><i data-lucide="rotate-cw"></i></button>
                         </div>
                     </div>
                 </div>
@@ -1820,9 +1969,10 @@
                         <p class="text-slate-500">${storeSettings.name}</p>
                         <p class="text-sm text-slate-500">ช่วงวันที่: ${dateRangeText}</p>
                     </div>
-                    <div class="bg-indigo-50 p-4 rounded-lg text-center mb-6 border border-indigo-200">
+                    <!-- อัปเดตสี -->
+                    <div class="bg-blue-50 p-4 rounded-lg text-center mb-6 border border-blue-200">
                         <h4 class="font-semibold text-gray-600">${summaryTitle}</h4>
-                        <p class="text-2xl font-bold text-indigo-700">${summaryTotal}</p>
+                        <p class="text-2xl font-bold text-blue-700">${summaryTotal}</p>
                     </div>
                     <div class="space-y-4">
                         ${listHTML.replace(/data-lucide/g, 'data-lucide-dummy')}
@@ -2105,11 +2255,10 @@
     </script>
 
     <!-- Footer -->
-    <footer class="text-center p-4 mt-8 text-sm text-gray-500">
+    <footer class="text-center p-4 mt-8 text-sm text-slate-500">
         <p>ผู้ดูแลระบบ นายปัณณธร บุญเมธาภัทร</p>
         <p>Copyright © 2025 สมุนไพรรักษ์ธรรม. All Rights Reserved</p>
     </footer>
 
 </body>
 </html>
-
