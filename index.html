@@ -199,12 +199,15 @@
                 <div id="customer-details" class="hidden">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                         <div class="flex items-center gap-4">
-                            <div class="w-16 h-16 rounded-full border-2 border-blue-200 bg-white flex items-center justify-center">
+                            <div class="w-16 h-16 rounded-full border-2 border-blue-200 bg-white flex items-center justify-center flex-shrink-0">
                                 <i data-lucide="user" class="w-8 h-8 text-blue-500"></i>
                             </div>
                             <div>
                                 <h3 id="profile-name" class="text-xl font-bold text-gray-800"></h3>
                                 <p id="profile-id" class="text-sm text-gray-500"></p>
+                                <!-- เพิ่มการแสดงรายละเอียด -->
+                                <p id="profile-address" class="text-sm text-gray-500 mt-1"></p>
+                                <p id="profile-total-spent" class="text-sm font-semibold text-blue-600 mt-1"></p>
                             </div>
                         </div>
                         <button id="back-to-login-btn" class="bg-white border border-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-50 flex items-center space-x-2">
@@ -657,6 +660,12 @@
                 currentCustomerId = customer.id;
                 document.getElementById('profile-name').textContent = customer.name;
                 document.getElementById('profile-id').textContent = `รหัสสมาชิก: ${customer.id}`;
+                
+                // Add details: Address and Total Spending
+                document.getElementById('profile-address').textContent = `ที่อยู่: ${customer.address || '-'}`;
+                const totalSpent = calculateCustomerTotalSpending(customer.id);
+                document.getElementById('profile-total-spent').textContent = `ยอดซื้อสะสม: ${totalSpent.toLocaleString()} บาท`;
+
                 customerLogin.classList.add('hidden');
                 customerDetails.classList.remove('hidden');
                 document.querySelectorAll('.customer-sub-section').forEach(el => el.classList.remove('active'));
