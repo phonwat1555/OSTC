@@ -372,7 +372,15 @@
                                 <input type="text" id="search-receipt-id" placeholder="ค้นหารหัสใบเสร็จ..." class="p-2 border rounded-lg w-full">
                                 <button id="search-order-btn" class="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700"><i data-lucide="search"></i></button>
                             </div>
-                            <button id="btn-show-add-order" class="bg-amber-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-amber-600 flex-shrink-0"><i data-lucide="plus"></i><span>เพิ่มคำสั่งซื้อ</span></button>
+                            <!-- เพิ่มปุ่มสรุปยอดประจำวัน -->
+                            <div class="flex gap-2 flex-shrink-0">
+                                <button id="daily-summary-btn" class="bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-purple-700" title="สรุปยอดขายสำหรับวันนี้">
+                                    <i data-lucide="clipboard-check"></i><span>ปิดการขายประจำวัน</span>
+                                </button>
+                                <button id="btn-show-add-order" class="bg-amber-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-amber-600">
+                                    <i data-lucide="plus"></i><span>เพิ่มคำสั่งซื้อ</span>
+                                </button>
+                            </div>
                         </div>
 
                         <form id="add-order-form" class="add-form bg-amber-50 p-6 rounded-lg mb-6 space-y-4">
@@ -1172,6 +1180,96 @@
             return `<div class="p-2 sm:p-4 printable-content"><div id="sales-report-content" class="bg-white p-6 sm:p-8 shadow-lg max-w-4xl mx-auto border"><div class="text-center mb-8"><img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="รักษ์ธรรม logo" class="h-16 w-auto mx-auto mb-2"><h2 class="text-2xl font-bold text-slate-800">รายงานสรุปยอดขาย</h2><p class="text-slate-500">${storeSettings.name}</p><p class="text-slate-500">สำหรับวันที่ ${formatDate(startDate)} ถึง ${formatDate(endDate)}</p></div><div class="grid grid-cols-2 gap-4 mb-6"><div class="bg-gray-100 p-4 rounded-lg text-center"><h4 class="font-bold text-gray-700">จำนวนคำสั่งซื้อ</h4><p class="text-2xl font-bold text-gray-900">${orders.length}</p></div><div class="bg-emerald-100 p-4 rounded-lg text-center"><h4 class="font-bold text-emerald-800">ยอดขายรวม</h4><p class="text-2xl font-bold text-emerald-900">${totalSales.toLocaleString()} บาท</p></div></div><h4 class="font-bold text-lg mb-2 mt-6">สรุปยอดขายตามสินค้า</h4><table class="w-full text-sm mb-8"><thead><tr class="bg-gray-100"><th class="p-2 text-left font-semibold">รหัสสินค้า</th><th class="p-2 text-left font-semibold">ชื่อสินค้า</th><th class="p-2 text-center font-semibold">จำนวนรวม</th><th class="p-2 text-right font-semibold">ยอดขายรวม</th></tr></thead><tbody>${productItemsHTML}</tbody></table><h4 class="font-bold text-lg mb-2">รายการคำสั่งซื้อทั้งหมด</h4><table class="w-full text-sm"><thead><tr class="bg-gray-100"><th class="p-2 text-left font-semibold">วันที่</th><th class="p-2 text-left font-semibold">รหัสสั่งซื้อ</th><th class="p-2 text-left font-semibold">ลูกค้า</th><th class="p-2 text-left font-semibold">ผู้ดำเนินการ</th><th class="p-2 text-right font-semibold">ยอดรวม</th></tr></thead><tbody>${orderItemsHTML}</tbody></table></div></div><div class="flex justify-end space-x-4 mt-4 p-4 print-hide"><button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ปิด</button><button class="print-doc-btn bg-gray-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-600 flex items-center space-x-2"><i data-lucide="printer"></i><span>ปริ้น</span></button><button class="download-doc-btn bg-emerald-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-emerald-700 flex items-center space-x-2"><i data-lucide="download"></i><span>ดาวน์โหลด</span></button></div>`;
         }
 
+        // --- Logic การสร้าง HTML สำหรับใบปิดยอดประจำวัน ---
+        function generateDailyCloseHTML(orders, productSales, date) {
+            const totalSales = orders.reduce((sum, o) => sum + calculateOrderTotal(o), 0);
+            const totalOrders = orders.length;
+            const orderItemsHTML = orders.map(order => { 
+                const customer = getCustomer(order.customerId); 
+                return `<tr class="border-b"><td class="p-2 text-sm">${order.id}</td><td class="p-2 text-sm">${customer ? customer.name : 'N/A'}</td><td class="p-2 text-sm text-center">${order.status}</td><td class="p-2 text-sm text-right">${calculateOrderTotal(order).toLocaleString()}</td></tr>`; 
+            }).join('');
+            
+            const productItemsHTML = productSales.map(sale => `
+                <tr class="border-b text-sm">
+                    <td class="p-2">${sale.product.name}</td>
+                    <td class="p-2 text-center">${sale.quantity}</td>
+                    <td class="p-2 text-right">${sale.total.toLocaleString()}</td>
+                </tr>
+            `).join('');
+
+            return `
+            <div class="p-2 sm:p-4 printable-content">
+                <div class="paper-a4 bg-white p-8 shadow-lg max-w-4xl mx-auto relative border">
+                    
+                    <div class="text-center mb-8 pb-4 border-b-2 border-gray-800">
+                        <img src="https://img5.pic.in.th/file/secure-sv1/-logob72920158adc10b2.png" alt="Logo" class="h-14 w-auto mx-auto mb-2">
+                        <h2 class="text-3xl font-bold text-gray-900 uppercase tracking-wider">ใบปิดยอดขายประจำวัน</h2>
+                        <p class="text-gray-600 mt-1">${storeSettings.name}</p>
+                        <p class="text-lg font-bold mt-2">วันที่: ${formatDate(date)}</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6 mb-8">
+                        <div class="border border-gray-300 p-4 rounded bg-gray-50">
+                            <h3 class="font-bold text-gray-500 uppercase text-xs mb-1">ยอดขายรวมทั้งสิ้น</h3>
+                            <p class="text-3xl font-bold text-gray-800">${totalSales.toLocaleString()} <span class="text-sm font-normal text-gray-500">บาท</span></p>
+                        </div>
+                        <div class="border border-gray-300 p-4 rounded bg-gray-50">
+                            <h3 class="font-bold text-gray-500 uppercase text-xs mb-1">จำนวนบิลทั้งหมด</h3>
+                            <p class="text-3xl font-bold text-gray-800">${totalOrders} <span class="text-sm font-normal text-gray-500">รายการ</span></p>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-8">
+                        <!-- รายการสินค้าขายดี -->
+                        <div class="w-1/2">
+                            <h4 class="font-bold text-lg mb-2 border-b pb-1">สรุปสินค้าที่ขายได้</h4>
+                            <table class="w-full">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="p-2 text-left text-xs font-bold text-gray-600 uppercase">สินค้า</th>
+                                        <th class="p-2 text-center text-xs font-bold text-gray-600 uppercase">จำนวน</th>
+                                        <th class="p-2 text-right text-xs font-bold text-gray-600 uppercase">ยอดรวม</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${productItemsHTML || '<tr><td colspan="3" class="text-center p-2 text-gray-400">ไม่มีรายการ</td></tr>'}</tbody>
+                            </table>
+                        </div>
+
+                        <!-- รายการบิล -->
+                        <div class="w-1/2">
+                            <h4 class="font-bold text-lg mb-2 border-b pb-1">รายการบิลของวันนี้</h4>
+                            <table class="w-full">
+                                <thead class="bg-gray-100">
+                                    <tr>
+                                        <th class="p-2 text-left text-xs font-bold text-gray-600 uppercase">เลขที่บิล</th>
+                                        <th class="p-2 text-left text-xs font-bold text-gray-600 uppercase">ลูกค้า</th>
+                                        <th class="p-2 text-center text-xs font-bold text-gray-600 uppercase">สถานะ</th>
+                                        <th class="p-2 text-right text-xs font-bold text-gray-600 uppercase">ยอดเงิน</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${orderItemsHTML || '<tr><td colspan="4" class="text-center p-2 text-gray-400">ไม่มีรายการ</td></tr>'}</tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="mt-12 pt-8 border-t border-gray-300 flex justify-between items-end">
+                        <div class="text-sm text-gray-500 w-1/2">
+                            <p>พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}</p>
+                            <p>ผู้สั่งพิมพ์: Admin</p>
+                        </div>
+                        <div class="text-center w-1/3">
+                            <div class="h-10 border-b border-gray-400 mb-2"></div>
+                            <p class="text-sm font-bold">ลายเซ็นผู้ตรวจสอบ / ผู้ปิดยอด</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-4 mt-4 p-4 print-hide">
+                <button class="close-modal-btn bg-gray-200 text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-300">ปิด</button>
+                <button class="print-doc-btn bg-gray-500 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-600 flex items-center space-x-2"><i data-lucide="printer"></i><span>ปริ้น</span></button>
+            </div>`;
+        }
+
         document.addEventListener('click', (e) => {
             const btn = e.target.closest('button');
             if(!btn) return;
@@ -1261,6 +1359,41 @@
             } else if (btn.classList.contains('view-customer-history-btn')) {
                 openCustomerHistoryModal(btn.dataset.customerId);
             }
+        });
+
+        // Event listener for Daily Summary Button
+        document.getElementById('daily-summary-btn').addEventListener('click', () => {
+            const today = new Date().toISOString().split('T')[0];
+            const dailyOrders = db.orders.filter(o => o.date.startsWith(today));
+            
+            if (dailyOrders.length === 0) {
+                Swal.fire('ไม่มีข้อมูล', 'ยังไม่มีคำสั่งซื้อสำหรับวันนี้', 'info');
+                return;
+            }
+
+            // Calculate product sales for today
+            const productSales = {};
+            dailyOrders.forEach(order => {
+                (order.items || []).forEach(item => {
+                    const product = getProduct(item.productId);
+                    if (product) {
+                        if (!productSales[item.productId]) {
+                            productSales[item.productId] = { product, quantity: 0, total: 0 };
+                        }
+                        productSales[item.productId].quantity += item.quantity;
+                        productSales[item.productId].total += item.quantity * product.price;
+                    }
+                });
+            });
+            const sortedProductSales = Object.values(productSales).sort((a,b) => b.total - a.total);
+
+            // Generate HTML
+            const closeDayHTML = generateDailyCloseHTML(dailyOrders, sortedProductSales, today);
+            
+            // Show Modal
+            const modal = document.getElementById('document-modal');
+            modal.innerHTML = closeDayHTML;
+            openModal('document');
         });
         
         document.getElementById('print-customer-list-btn').addEventListener('click', () => {
