@@ -613,35 +613,101 @@
         function generateOrderCardHTML(order) {
             const total = calculateOrderTotal(order);
             const statusIcons = { "รอการยืนยัน": "clock", "รับคำสั่งซื้อ": "file-check", "ชำระเงิน": "credit-card", "จัดส่งแล้ว": "truck" };
+            
+            // Configuration for colors based on current status
+            const statusConfig = {
+                "รอการยืนยัน": { color: "amber", label: "รอการยืนยัน" },
+                "รับคำสั่งซื้อ": { color: "blue", label: "รับคำสั่งซื้อ" },
+                "ชำระเงิน": { color: "indigo", label: "ชำระเงินแล้ว" },
+                "จัดส่งแล้ว": { color: "emerald", label: "จัดส่งเรียบร้อย" }
+            };
+
+            const currentConfig = statusConfig[order.status] || { color: "gray", label: order.status };
+            const themeColor = currentConfig.color;
 
             const productInfoHTML = (order.items || []).map(item => {
                 const product = getProduct(item.productId);
-                return product ? `<p class="text-sm text-gray-600 truncate">${item.quantity} x ${product.name}</p>` : '';
+                return product ? `<div class="flex justify-between text-sm text-gray-600 mb-1"><span>${product.name}</span><span class="font-mono">x${item.quantity}</span></div>` : '';
             }).join('');
 
             const currentStatusIndex = ALL_STATUSES.indexOf(order.status);
+            const progressPercentage = (currentStatusIndex / (ALL_STATUSES.length - 1)) * 100;
             
             const statusTimelineHTML = `
-                <div class="w-full mt-4 overflow-x-auto pb-2">
-                    <div class="flex min-w-[300px]">
+                <div class="w-full mt-6 mb-8 px-2 relative">
+                    <!-- Progress Bar Background -->
+                    <div class="absolute top-1/2 left-2 right-2 h-1.5 bg-gray-100 rounded-full -translate-y-1/2 -z-10"></div>
+                    <!-- Active Progress Bar -->
+                    <div class="absolute top-1/2 left-2 h-1.5 bg-${themeColor}-500 rounded-full -translate-y-1/2 -z-10 transition-all duration-500" style="width: calc(${progressPercentage}% - 1rem);"></div>
+
+                    <div class="flex justify-between w-full">
                         ${ALL_STATUSES.map((status, index) => {
                             const isCompleted = index <= currentStatusIndex;
-                            const circleClass = isCompleted ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300';
-                            const iconClass = isCompleted ? 'text-white' : 'text-gray-400';
-                            const lineClass = (index < currentStatusIndex) ? 'bg-blue-600' : 'bg-gray-300';
-                            const textClass = isCompleted ? 'text-gray-800' : 'text-slate-400';
-                            return `<div class="flex-1 flex items-center relative">${index > 0 ? `<div class="flex-1 h-1 ${lineClass} absolute w-full right-[50%] top-[1.25rem] -z-10"></div>` : ''}<div class="relative w-full flex flex-col items-center"><div class="w-10 h-10 rounded-full flex items-center justify-center border-2 ${circleClass} transition-all duration-300 bg-white z-10"><i data-lucide="${statusIcons[status] || 'help-circle'}" class="w-5 h-5 ${iconClass}"></i></div><p class="text-xs text-center mt-2 ${textClass} font-semibold w-20 break-words">${status}</p></div>${index < ALL_STATUSES.length - 1 ? `<div class="flex-1 h-1 ${lineClass} absolute w-full left-[50%] top-[1.25rem] -z-10"></div>` : ''}</div>`;
+                            const isCurrent = index === currentStatusIndex;
+                            
+                            let circleClass = isCompleted 
+                                ? `bg-${themeColor}-500 border-${themeColor}-500 text-white shadow-md scale-100` 
+                                : `bg-white border-gray-300 text-gray-300 scale-90`;
+                            
+                            if (isCurrent) {
+                                circleClass += ` ring-4 ring-${themeColor}-100 scale-110`;
+                            }
+
+                            const textClass = isCompleted 
+                                ? `text-${themeColor}-700 font-bold` 
+                                : `text-gray-400`;
+
+                            return `
+                            <div class="flex flex-col items-center relative">
+                                <div class="w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${circleClass} z-10">
+                                    <i data-lucide="${statusIcons[status]}" class="w-5 h-5"></i>
+                                </div>
+                                <div class="absolute top-11 w-32 text-center">
+                                    <p class="text-xs transition-all duration-300 ${textClass}">${status}</p>
+                                    ${isCurrent ? `<p class="text-[10px] text-${themeColor}-500 font-medium animate-pulse">สถานะปัจจุบัน</p>` : ''}
+                                </div>
+                            </div>`;
                         }).join('')}
                     </div>
                 </div>
             `;
 
-            let actionButtons = `<button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบสั่งซื้อ</span></button><button class="customer-download-btn w-full text-center text-sm bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="download" class="w-4 h-4"></i> <span>โหลดใบสั่งซื้อ</span></button>`;
+            let actionButtons = `<button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center justify-center space-x-2 transition-colors" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ใบสั่งซื้อ</span></button><button class="customer-download-btn w-full text-center text-sm bg-${themeColor}-600 text-white px-3 py-2 rounded-lg hover:bg-${themeColor}-700 flex items-center justify-center space-x-2 transition-colors shadow-sm" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="download" class="w-4 h-4"></i> <span>โหลด</span></button>`;
             if (order.receiptId) {
-                actionButtons += `<button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบเสร็จ</span></button><button class="customer-download-btn w-full text-center text-sm bg-emerald-600 text-white px-3 py-1.5 rounded-md hover:bg-emerald-700 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="receipt" class="w-4 h-4"></i> <span>โหลดใบเสร็จ</span></button>`;
+                actionButtons += `<button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-50 flex items-center justify-center space-x-2 transition-colors" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ใบเสร็จ</span></button><button class="customer-download-btn w-full text-center text-sm bg-emerald-600 text-white px-3 py-2 rounded-lg hover:bg-emerald-700 flex items-center justify-center space-x-2 transition-colors shadow-sm" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="receipt" class="w-4 h-4"></i> <span>โหลด</span></button>`;
             }
 
-            return `<div class="border rounded-xl p-4 sm:p-6 bg-white transition-shadow duration-300 hover:shadow-lg"><div class="flex justify-between items-start border-b pb-4"><div><p class="font-bold text-gray-800">รหัสสั่งซื้อ: <span class="text-blue-600">${order.id}</span></p><p class="text-sm text-gray-500">วันที่: ${formatDate(order.date)}</p></div><div class="text-right flex-shrink-0 ml-2"><p class="text-lg font-bold text-gray-800">${total.toLocaleString()} บาท</p><p class="text-xs text-gray-500">${order.items.length} รายการ</p></div></div><div class="pt-6 pb-8"><div class="mb-8">${productInfoHTML}</div>${statusTimelineHTML}</div><div class="border-t pt-4">${order.shippingProvider ? `<div class="mb-4 text-sm bg-gray-50 p-3 rounded-lg"><strong>การจัดส่ง:</strong> ${order.shippingProvider} - ${order.trackingNumber || 'ไม่มีเลขพัสดุ'}</div>` : ''}<div class="grid grid-cols-2 gap-2">${actionButtons}</div></div></div>`;
+            return `<div class="border border-${themeColor}-100 rounded-2xl p-5 bg-white shadow-sm hover:shadow-md transition-all duration-300 mb-4 overflow-hidden relative">
+                <div class="absolute top-0 left-0 w-1.5 h-full bg-${themeColor}-500"></div>
+                <div class="pl-3">
+                    <div class="flex justify-between items-start border-b border-gray-100 pb-3 mb-4">
+                        <div>
+                            <p class="font-bold text-gray-800 text-lg flex items-center gap-2">
+                                <span class="text-${themeColor}-600">#${order.id}</span>
+                            </p>
+                            <p class="text-xs text-gray-500 flex items-center gap-1 mt-1"><i data-lucide="calendar" class="w-3 h-3"></i> ${formatDate(order.date)}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-lg font-bold text-${themeColor}-600">${total.toLocaleString()} ฿</p>
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-${themeColor}-100 text-${themeColor}-800">
+                                ${order.status}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                        <p class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">รายการสินค้า</p>
+                        ${productInfoHTML}
+                    </div>
+
+                    ${statusTimelineHTML}
+
+                    <div class="pt-4 mt-4 border-t border-gray-100">
+                        ${order.shippingProvider ? `<div class="mb-4 text-sm bg-blue-50 text-blue-700 p-3 rounded-lg flex items-start gap-3"><i data-lucide="truck" class="w-5 h-5 flex-shrink-0 mt-0.5"></i><div><p class="font-bold">ข้อมูลการจัดส่ง</p><p>${order.shippingProvider} : <span class="font-mono font-bold">${order.trackingNumber || '-'}</span></p></div></div>` : ''}
+                        <div class="grid grid-cols-2 gap-3">${actionButtons}</div>
+                    </div>
+                </div>
+            </div>`;
         }
 
         function renderCustomerHistory(customerId) {
