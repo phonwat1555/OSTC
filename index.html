@@ -339,7 +339,8 @@
                     <div id="mgmt-section-orders" class="mgmt-section">
                         <div class="flex flex-col md:flex-row justify-between items-center mb-4 border-b pb-4 gap-4">
                             <h3 class="text-2xl font-bold flex-shrink-0">จัดการคำสั่งซื้อ</h3>
-                            <div class="flex flex-col sm:flex-row gap-2 w-full">
+                            
+                            <div id="order-search-controls" class="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
                                 <input type="text" id="search-order-id" placeholder="ค้นหารหัสสั่งซื้อ..." class="p-2 border rounded-lg w-full">
                                 <input type="text" id="search-receipt-id" placeholder="ค้นหารหัสใบเสร็จ..." class="p-2 border rounded-lg w-full">
                                 <!-- อัปเดตสีปุ่ม -->
@@ -410,7 +411,6 @@
                             </div>
                         </form>
 
-                        <!-- อัปเดตสีตาราง -->
                         <div class="overflow-x-auto"><table class="min-w-full"><thead class="bg-amber-100"><tr><th class="p-3 text-left">รหัสสั่งซื้อ</th><th class="p-3 text-left">ลูกค้า</th><th class="p-3 text-left">ยอดรวม</th><th class="p-3 text-left">สถานะ</th><th class="p-3 text-left">วันที่</th><th class="p-3 text-left">ผู้ดำเนินการ</th><th class="p-3 text-left">การกระทำ</th></tr></thead><tbody id="admin-orders-table"></tbody></table></div>
                     </div>
 
@@ -570,7 +570,8 @@
         let newOrderItems = [];
         
         // --- [START] อัปเดต ALL_STATUSES ---
-        const ALL_STATUSES = ["รับคำสั่งซื้อ", "ชำระเงินแล้ว", "จัดส่งแล้ว", "ลูกค้าได้รับแล้ว", "ยืนยันการรับแล้ว"];
+        // แก้ไขสถานะเป็น 3 ขั้นตอน และเปลี่ยน "ชำระเงินแล้ว" เป็น "ชำระเงิน"
+        const ALL_STATUSES = ["รับคำสั่งซื้อ", "ชำระเงิน", "จัดส่งแล้ว"];
         // --- [END] อัปเดต ALL_STATUSES ---
 
         const ADMIN_PASSWORD = 'admin1234'; 
@@ -666,7 +667,7 @@
                 if (shippingInfo.provider) order.shippingProvider = shippingInfo.provider;
                 if (shippingInfo.tracking) order.trackingNumber = shippingInfo.tracking;
 
-                if (statusChanged && newStatus === 'ชำระเงินแล้ว' && !order.receiptId) {
+                if (statusChanged && newStatus === 'ชำระเงิน' && !order.receiptId) {
                     generateReceiptDetails(order);
                 }
                 return true;
@@ -678,10 +679,8 @@
             const total = calculateOrderTotal(order);
             const statusIcons = {
                 "รับคำสั่งซื้อ": "file-plus-2",
-                "ชำระเงินแล้ว": "credit-card",
+                "ชำระเงิน": "credit-card",
                 "จัดส่งแล้ว": "truck",
-                "ลูกค้าได้รับแล้ว": "package-check",
-                "ยืนยันการรับแล้ว": "check-check", // เพิ่มไอคอนสำหรับสถานะใหม่
             };
 
             const productInfoHTML = (order.items || []).map(item => {
@@ -695,7 +694,6 @@
                     <div class="flex">
                         ${ALL_STATUSES.map((status, index) => {
                             const isCompleted = index <= currentStatusIndex;
-                            /* อัปเดตสี Timeline (Blue) */
                             const circleClass = isCompleted ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300';
                             const iconClass = isCompleted ? 'text-white' : 'text-gray-400';
                             const lineClass = (index < currentStatusIndex) ? 'bg-blue-600' : 'bg-gray-300';
@@ -720,46 +718,19 @@
 
             let actionButtons = `
                 <button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบสั่งซื้อ</span></button>
-                <!-- อัปเดตสีปุ่ม Download -->
                 <button class="customer-download-btn w-full text-center text-sm bg-blue-600 text-white px-3 py-1.5 rounded-md hover:bg-blue-700 flex items-center justify-center space-x-1" data-doc-type="invoice" data-order-id="${order.id}"><i data-lucide="download" class="w-4 h-4"></i> <span>โหลดใบสั่งซื้อ</span></button>
             `;
             if (order.receiptId) {
                 actionButtons += `
                     <button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบเสร็จ</span></button>
-                    <!-- อัปเดตสีปุ่ม Download (Emerald) -->
                     <button class="customer-download-btn w-full text-center text-sm bg-emerald-600 text-white px-3 py-1.5 rounded-md hover:bg-emerald-700 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="receipt" class="w-4 h-4"></i> <span>โหลดใบเสร็จ</span></button>
                 `;
             }
-
-            // --- [START] การเปลี่ยนแปลงสำหรับปุ่มยืนยันการรับสินค้า ---
-            if (order.status === "ลูกค้าได้รับแล้ว") {
-                // ถ้าได้รับของแล้ว ให้แสดงปุ่มยืนยัน
-                // เราจะสร้าง actionButtons ใหม่ทั้งหมดสำหรับสถานะนี้
-                actionButtons = `
-                    ${order.receiptId ? `<button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบเสร็จ</span></button>` : '<div class="hidden"></div>'}
-                    <button class="customer-confirm-receipt-btn w-full text-center text-sm bg-emerald-600 text-white px-3 py-2 rounded-md hover:bg-emerald-700 flex items-center justify-center space-x-2 ${order.receiptId ? '' : 'col-span-2'}" data-order-id="${order.id}">
-                        <i data-lucide="check-check" class="w-5 h-5"></i> 
-                        <span>กดยืนยันการรับสินค้า</span>
-                    </button>
-                `;
-            } else if (order.status === "ยืนยันการรับแล้ว") {
-                // ถ้ายืนยันแล้ว ให้แสดงข้อความ
-                 actionButtons = `
-                    ${order.receiptId ? `<button class="view-doc-btn w-full text-center text-sm bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-md hover:bg-gray-50 flex items-center justify-center space-x-1" data-doc-type="receipt" data-order-id="${order.id}"><i data-lucide="eye" class="w-4 h-4"></i> <span>ดูใบเสร็จ</span></button>` : '<div class="hidden"></div>'}
-                    <div class="text-center text-sm bg-emerald-50 text-emerald-700 p-2 rounded-lg font-semibold flex items-center justify-center space-x-2 ${order.receiptId ? '' : 'col-span-2'}">
-                        <i data-lucide="check-circle" class="w-5 h-5"></i>
-                        <span>รายการสำเร็จแล้ว</span>
-                    </div>
-                `;
-            }
-            // --- [END] การเปลี่ยนแปลงสำหรับปุ่มยืนยันการรับสินค้า ---
-
 
             return `
             <div class="border rounded-xl p-4 sm:p-6 bg-white transition-shadow duration-300 hover:shadow-lg">
                 <div class="flex justify-between items-start border-b pb-4">
                     <div>
-                        <!-- อัปเดตสี Order ID -->
                         <p class="font-bold text-gray-800">รหัสสั่งซื้อ: <span class="text-blue-600">${order.id}</span></p>
                         <p class="text-sm text-gray-500">วันที่: ${formatDate(order.date)}</p>
                     </div>
@@ -800,7 +771,6 @@
             lucide.createIcons();
         }
 
-
         // --- Customer View Logic ---
         document.getElementById('check-member-btn').addEventListener('click', () => {
             const memberId = document.getElementById('member-id').value.toUpperCase();
@@ -827,53 +797,6 @@
             document.getElementById('member-id').value = '';
         });
 
-        // --- [START] เพิ่ม Event Listener สำหรับปุ่มกดยืนยันการรับสินค้า ---
-        document.getElementById('customer-details').addEventListener('click', async (e) => {
-            const confirmBtn = e.target.closest('.customer-confirm-receipt-btn');
-            if (confirmBtn) {
-                const orderId = confirmBtn.dataset.orderId;
-                if (!orderId) return;
-
-                confirmBtn.disabled = true; // ป้องกันการกดซ้ำ
-                confirmBtn.innerHTML = '<i data-lucide="loader" class="animate-spin w-5 h-5"></i> กำลังบันทึก...';
-                lucide.createIcons();
-
-                // อัปเดตสถานะเป็น "ยืนยันการรับแล้ว"
-                const success = await updateOrderStatus(orderId, "ยืนยันการรับแล้ว");
-                
-                if (success) {
-                    // บันทึกข้อมูลลง Google Sheet
-                    await saveDataToGoogleSheet(false); 
-
-                    // แสดงข้อความ "รายการสำเร็จแล้ว"
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'รายการสำเร็จแล้ว',
-                        text: 'ขอบคุณที่ยืนยันการรับสินค้า!',
-                        showConfirmButton: false,
-                        timer: 2000
-                    });
-
-                    // โหลดข้อมูลประวัติลูกค้าใหม่เพื่ออัปเดตหน้าจอ
-                    const memberId = document.getElementById('member-id').value.toUpperCase();
-                    if (memberId) {
-                        renderCustomerHistory(memberId);
-                    }
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'ผิดพลาด',
-                        text: 'ไม่สามารถอัปเดตสถานะได้ กรุณาลองใหม่อีกครั้ง'
-                    });
-                    // คืนค่าปุ่ม
-                    confirmBtn.disabled = false;
-                     confirmBtn.innerHTML = '<i data-lucide="check-check" class="w-5 h-5"></i> <span>กดยืนยันการรับสินค้า</span>';
-                     lucide.createIcons();
-                }
-            }
-        });
-        // --- [END] เพิ่ม Event Listener ---
-
         // --- Admin View Logic ---
         const adminMainBtns = document.querySelectorAll('.admin-main-btn');
         const mgmtSections = document.querySelectorAll('.mgmt-section');
@@ -887,8 +810,33 @@
         adminMainBtns.forEach(btn => btn.addEventListener('click', () => switchAdminSection(btn.dataset.target)));
 
         function renderAllAdminContent() {
-            currentCustomerSource = db.customers || [];
-            renderCustomerTable();
+            // --- [START] แก้ไข Logic การจำค่าหน้าและคำค้นหา เพื่อป้องกันหน้าเด้ง ---
+            
+            // 1. ตรวจสอบว่ามีการค้นหาค้างอยู่หรือไม่
+            const query = document.getElementById('search-customer-id').value.trim().toUpperCase();
+            if (query) {
+                // ถ้ามีคำค้นหา ให้กรองข้อมูลจาก db ใหม่ (เพื่อให้ได้ข้อมูลล่าสุดที่ตรงกับคำค้นหา)
+                currentCustomerSource = (db.customers || []).filter(c => c.id.toUpperCase().includes(query));
+            } else {
+                // ถ้าไม่มีคำค้นหา ให้ใช้ข้อมูลทั้งหมด
+                currentCustomerSource = db.customers || [];
+            }
+
+            // 2. ตรวจสอบหน้าปัจจุบัน (Current Page)
+            let targetPage = adminPaginationState.customers.currentPage;
+            
+            // คำนวณจำนวนหน้าสูงสุดตามข้อมูลชุดใหม่
+            const totalPages = Math.ceil(currentCustomerSource.length / adminPaginationState.customers.itemsPerPage) || 1;
+            
+            // ป้องกันการค้างอยู่ที่หน้าที่ไม่มีอยู่จริง (เช่น อยู่หน้า 5 แต่ข้อมูลเหลือแค่ 3 หน้า)
+            if (targetPage > totalPages) targetPage = totalPages;
+            if (targetPage < 1) targetPage = 1;
+
+            // 3. เรียก render โดยส่งหน้าที่ถูกต้องไป
+            renderCustomerTable(targetPage);
+
+            // --- [END] จบการแก้ไข ---
+
             renderProductTable();
             renderOrderTable(db.orders);
             renderDashboard();
@@ -1409,15 +1357,7 @@
                         )
                     }
                 });
-            } else if (btn.classList.contains('view-status-history-btn')) {
-                openModal('status-history', btn.dataset.orderId);
-            } else if (btn.classList.contains('edit-status-btn')) {
-                openModal('edit-status', btn.dataset.orderId);
-            } else if (btn.classList.contains('edit-stock-btn')) {
-                openModal('edit-stock', btn.dataset.productId);
-            } else if (btn.classList.contains('view-customer-history-btn')) {
-                openCustomerHistoryModal(btn.dataset.customerId);
-            }
+            } 
         });
 
         // --- View Switching ---
@@ -1644,6 +1584,16 @@
                 if (type === 'customers') {
                     renderCustomerTable(page);
                 }
+            }
+            // --- [NEW] เพิ่ม Logic สำหรับปุ่มที่อาจอยู่ใน Modal (อยู่นอก adminSection) ---
+            else if (btn.classList.contains('view-status-history-btn')) {
+                openModal('status-history', btn.dataset.orderId);
+            } else if (btn.classList.contains('edit-status-btn')) {
+                openModal('edit-status', btn.dataset.orderId);
+            } else if (btn.classList.contains('edit-stock-btn')) {
+                openModal('edit-stock', btn.dataset.productId);
+            } else if (btn.classList.contains('view-customer-history-btn')) {
+                openCustomerHistoryModal(btn.dataset.customerId);
             }
         });
         
@@ -2198,19 +2148,33 @@
                     });
                 }
 
+                // --- [EDIT] แก้ไข Logic การแสดงผลหน้าแรก (Report) ---
+                // ตรวจสอบว่าผู้ใช้เลือกวันที่ค้างไว้หรือไม่
+                const startDate = document.getElementById('report-start-date').value;
+                const endDate = document.getElementById('report-end-date').value;
+                
+                if (startDate && endDate) {
+                    // ถ้ามีการเลือกวันที่อยู่ ให้คงการกรองข้อมูลเดิมไว้ (สำหรับตอน Auto Refresh)
+                    currentFilteredOrders = (db.orders || []).filter(order => {
+                        const orderDate = order.date.split('T')[0];
+                        return orderDate >= startDate && orderDate <= endDate;
+                    });
+                } else {
+                    // ถ้าไม่ได้เลือกวันที่ (เช่น เข้ามาครั้งแรก) ให้แสดงข้อมูล "ทั้งหมด" (ไม่ต้องเด้งเป็นรายวัน)
+                    currentFilteredOrders = db.orders || [];
+                }
 
+                // เรียกแสดงผลหน้า Admin
                 renderAllAdminContent(); 
                 
-                if (!isRefresh) {
-                    const today = new Date().toISOString().split('T')[0];
-                    document.getElementById('report-start-date').value = today;
-                    document.getElementById('report-end-date').value = today;
-                    document.getElementById('filter-report-btn').click();
-                } else {
-                     // Re-apply filters on refresh
-                    document.getElementById('filter-report-btn').click();
-                    document.getElementById('search-order-btn').click();
+                // คงสถานะการค้นหาในหน้า Order (ถ้ามี)
+                if (isRefresh) {
+                     const orderSearchBtn = document.getElementById('search-order-btn');
+                     const orderIdQuery = document.getElementById('search-order-id').value;
+                     const receiptIdQuery = document.getElementById('search-receipt-id').value;
+                     if(orderIdQuery || receiptIdQuery) orderSearchBtn.click();
                 }
+                // --- [END] จบการแก้ไข ---
 
 
             } catch (error) {
