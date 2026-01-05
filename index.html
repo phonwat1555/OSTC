@@ -642,8 +642,8 @@
         let currentCustomerId = null; // [NEW] รหัสลูกค้าที่ล็อกอินอยู่
         
         // --- [START] อัปเดต ALL_STATUSES ---
-        // แก้ไขสถานะเป็น 3 ขั้นตอน และเปลี่ยน "ชำระเงินแล้ว" เป็น "ชำระเงิน"
-        const ALL_STATUSES = ["รับคำสั่งซื้อ", "ชำระเงิน", "จัดส่งแล้ว"];
+        // เพิ่ม "รอการยืนยัน" เป็นสถานะแรก
+        const ALL_STATUSES = ["รอการยืนยัน", "รับคำสั่งซื้อ", "ชำระเงิน", "จัดส่งแล้ว"];
         // --- [END] อัปเดต ALL_STATUSES ---
 
         const ADMIN_PASSWORD = 'admin1234'; 
@@ -750,7 +750,8 @@
         function generateOrderCardHTML(order) {
             const total = calculateOrderTotal(order);
             const statusIcons = {
-                "รับคำสั่งซื้อ": "file-plus-2",
+                "รอการยืนยัน": "clock",
+                "รับคำสั่งซื้อ": "file-check",
                 "ชำระเงิน": "credit-card",
                 "จัดส่งแล้ว": "truck",
             };
@@ -761,9 +762,11 @@
             }).join('');
 
             const currentStatusIndex = ALL_STATUSES.indexOf(order.status);
+            
+            // Adjust to use min-w so timeline doesn't break on small screens with many items
             const statusTimelineHTML = `
-                <div class="w-full mt-4">
-                    <div class="flex">
+                <div class="w-full mt-4 overflow-x-auto pb-2">
+                    <div class="flex min-w-[300px]">
                         ${ALL_STATUSES.map((status, index) => {
                             const isCompleted = index <= currentStatusIndex;
                             const circleClass = isCompleted ? 'bg-blue-600 border-blue-600' : 'bg-white border-gray-300';
@@ -772,15 +775,15 @@
                             const textClass = isCompleted ? 'text-gray-800' : 'text-slate-400';
 
                             return `
-                                <div class="flex-1 flex items-center">
-                                    ${index > 0 ? `<div class="flex-1 h-1 ${lineClass}"></div>` : ''}
-                                    <div class="relative">
-                                        <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 ${circleClass} transition-all duration-300">
+                                <div class="flex-1 flex items-center relative">
+                                    ${index > 0 ? `<div class="flex-1 h-1 ${lineClass} absolute w-full right-[50%] top-[1.25rem] -z-10"></div>` : ''}
+                                    <div class="relative w-full flex flex-col items-center">
+                                        <div class="w-10 h-10 rounded-full flex items-center justify-center border-2 ${circleClass} transition-all duration-300 bg-white z-10">
                                             <i data-lucide="${statusIcons[status] || 'help-circle'}" class="w-5 h-5 ${iconClass}"></i>
                                         </div>
-                                        <p class="absolute -bottom-6 w-20 text-center text-xs ${textClass} font-semibold" style="left: 50%; transform: translateX(-50%);">${status}</p>
+                                        <p class="text-xs text-center mt-2 ${textClass} font-semibold w-20 break-words">${status}</p>
                                     </div>
-                                    ${index < ALL_STATUSES.length - 1 ? `<div class="flex-1 h-1 ${lineClass}"></div>` : ''}
+                                    ${index < ALL_STATUSES.length - 1 ? `<div class="flex-1 h-1 ${lineClass} absolute w-full left-[50%] top-[1.25rem] -z-10"></div>` : ''}
                                 </div>
                             `;
                         }).join('')}
@@ -1014,20 +1017,20 @@
             }
 
             // 2. Create Order Object
-            // สถานะเริ่มแรกคือ "รับคำสั่งซื้อ" ซึ่งจะไปโชว์ที่ฝั่ง Admin
+            // [EDIT] เปลี่ยนสถานะเริ่มต้นเป็น "รอการยืนยัน"
             const newOrder = {
                 id: `ORD-${Date.now()}`,
                 customerId: currentCustomerId,
                 date: new Date().toISOString().split('T')[0],
                 items: [...customerCart],
-                status: "รับคำสั่งซื้อ", // This status triggers visibility in admin panel
+                status: "รอการยืนยัน", // Changed from "รับคำสั่งซื้อ"
                 paymentDetails: document.getElementById('cart-note').value || '-',
                 receiptId: null,
                 receiptDate: null,
-                handlerEmployee: "Online Order", // Auto-mark
+                handlerEmployee: "Online Order", 
                 shippingProvider: null,
                 trackingNumber: null,
-                statusHistory: [{ status: "รับคำสั่งซื้อ", date: new Date().toISOString().split('T')[0] }]
+                statusHistory: [{ status: "รอการยืนยัน", date: new Date().toISOString().split('T')[0] }]
             };
 
             // 3. Deduct Stock Locally
@@ -1069,7 +1072,6 @@
             });
 
             // Sync to Google Sheet (Notification mechanism for Admin)
-            // เมื่อ Admin เปิดหน้าจออยู่ ระบบ Auto Refresh (5 วิ) จะดึงข้อมูลนี้ไปแสดงเอง
             await saveDataToGoogleSheet();
         }
 
@@ -1226,22 +1228,36 @@
             table.innerHTML = orders.sort((a,b) => new Date(b.date) - new Date(a.date)).map(o => {
                 const customer = getCustomer(o.customerId);
                 
-                const actionButtons = `
-                    <div class="flex items-center space-x-1">
+                // [NEW] Logic: Show "Confirm" button if waiting, hide "Edit"
+                let actionButtons = `<div class="flex items-center space-x-1">`;
+                
+                if (o.status === "รอการยืนยัน") {
+                    actionButtons += `
+                        <button class="confirm-order-btn text-emerald-500 hover:text-emerald-700 p-1 bg-emerald-50 rounded border border-emerald-200" data-order-id="${o.id}" title="ยืนยันออเดอร์">
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                        </button>
+                    `;
+                }
+
+                actionButtons += `
                         <button class="view-status-history-btn text-gray-500 hover:text-gray-700 p-1" data-order-id="${o.id}" title="ดูประวัติสถานะ"><i data-lucide="list-ordered" class="w-5 h-5"></i></button>
-                        <!-- อัปเดตสีไอคอน -->
-                        <button class="edit-status-btn text-blue-500 hover:text-blue-700 p-1" data-order-id="${o.id}" title="แก้ไขสถานะ"><i data-lucide="file-cog" class="w-5 h-5"></i></button>
+                `;
+                
+                // Only show Edit Status if NOT waiting for confirmation (force confirmation first)
+                if (o.status !== "รอการยืนยัน") {
+                    actionButtons += `<button class="edit-status-btn text-blue-500 hover:text-blue-700 p-1" data-order-id="${o.id}" title="แก้ไขสถานะ"><i data-lucide="file-cog" class="w-5 h-5"></i></button>`;
+                }
+                
+                actionButtons += `
                         <button class="view-doc-btn text-blue-500 hover:text-blue-700 p-1" data-doc-type="${o.receiptId ? 'receipt' : 'invoice'}" data-order-id="${o.id}" title="ดูเอกสาร"><i data-lucide="eye" class="w-5 h-5"></i></button>
                         <button class="delete-btn text-red-500 hover:text-red-700 p-1" data-type="orders" data-id="${o.id}" title="ลบ"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
                     </div>
                 `;
                 
-                // --- [START] เพิ่มสไตล์สำหรับสถานะ "ยืนยันการรับแล้ว" ---
                 let statusClass = "font-semibold";
-                if (o.status === "ยืนยันการรับแล้ว") {
-                    statusClass += " text-emerald-600";
-                }
-                // --- [END] เพิ่มสไตล์ ---
+                if (o.status === "รอการยืนยัน") statusClass += " text-orange-500";
+                else if (o.status === "รับคำสั่งซื้อ") statusClass += " text-blue-600";
+                else if (o.status === "จัดส่งแล้ว") statusClass += " text-emerald-600";
 
 
                 return `
@@ -1553,12 +1569,13 @@
                 }
             });
 
+            // [NEW] Admin Manual Order: Starts at "รับคำสั่งซื้อ" (skip waiting)
             const newOrder = {
                 id: `ORD-${Date.now()}`, 
                 customerId: document.getElementById('order-customer-id').value,
                 date: new Date().toISOString().split('T')[0],
                 items: [...newOrderItems],
-                status: "รับคำสั่งซื้อ",
+                status: "รับคำสั่งซื้อ", // Manual admin orders are auto-confirmed
                 paymentDetails: document.getElementById('order-payment-details').value,
                 receiptId: null, 
                 receiptDate: null,
@@ -1583,11 +1600,34 @@
         });
 
 
-        adminSection.addEventListener('click', (e) => {
+        adminSection.addEventListener('click', async (e) => {
             const btn = e.target.closest('button');
             if (!btn) return;
 
-            if (btn.classList.contains('delete-btn')) {
+            // [NEW] Handle Confirm Order Button
+            if (btn.classList.contains('confirm-order-btn')) {
+                const orderId = btn.dataset.orderId;
+                Swal.fire({
+                    title: 'ยืนยันออเดอร์นี้?',
+                    text: "คุณตรวจสอบรายการนี้และต้องการรับคำสั่งซื้อใช่ไหม?",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981', // Emerald
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'ยืนยันออเดอร์',
+                    cancelButtonText: 'ยกเลิก'
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        const success = await updateOrderStatus(orderId, 'รับคำสั่งซื้อ');
+                        if (success) {
+                            Swal.fire('ยืนยันแล้ว!', 'คำสั่งซื้อเข้าสู่สถานะดำเนินการแล้ว', 'success');
+                            renderAllAdminContent();
+                            await saveDataToGoogleSheet();
+                        }
+                    }
+                });
+            }
+            else if (btn.classList.contains('delete-btn')) {
                  Swal.fire({
                     title: 'ยืนยันการลบ',
                     text: "คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
@@ -2396,7 +2436,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'การสำรองข้อมูลล้มเหลว',
-                    text: `เกิดข้อผิดพลาด: ${error.message}`
+                    text: `เกิดข้อผิดพลาดในการซิงค์ข้อมูล: ${error.message}`
                 });
             }
         }
